@@ -118,11 +118,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 blurRadius: 10,
                 offset: const Offset(0, 2),
               ),
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 2,
+                offset: Offset.zero,
+              ),
             ],
           ),
           child: Image.asset(
             'assets/logo.jpg',
-            height: 84,
+            height: 126,
+            width: 126,
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => const Text(
               'Radio WAH',
