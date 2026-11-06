@@ -17,11 +17,22 @@ class TrackMetadata {
     this.isHit = false,
   });
 
+  static String _sanitizeText(String text) {
+    return text
+        .replaceAll('\u2018', "'") // Left single quotation mark
+        .replaceAll('\u2019', "'") // Right single quotation mark
+        .replaceAll('\u201C', '"') // Left double quotation mark
+        .replaceAll('\u201D', '"') // Right double quotation mark
+        .replaceAll('\u2026', '...') // Ellipsis
+        .replaceAll('\u2013', '-') // En dash
+        .replaceAll('\u2014', '-'); // Em dash
+  }
+
   factory TrackMetadata.fromJson(Map<String, dynamic> json) {
     final result = json['result'] as Map<String, dynamic>? ?? json;
     return TrackMetadata(
-      title: (result['metadataTitle'] ?? result['title'] ?? '').toString(),
-      artist: (result['metadataArtist'] ?? result['artist'] ?? '').toString(),
+      title: _sanitizeText((result['metadataTitle'] ?? result['title'] ?? '').toString()),
+      artist: _sanitizeText((result['metadataArtist'] ?? result['artist'] ?? '').toString()),
       label: result['label']?.toString(),
       artworkSmall: result['artworkSmall']?.toString(),
       artworkLarge: result['artworkLarge']?.toString(),

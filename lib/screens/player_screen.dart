@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/app_state.dart';
+import '../models/schedule.dart';
+import '../services/radio_api_service.dart';
 import '../services/radio_player_controller.dart';
 import '../widgets/blurred_artwork_background.dart';
 import 'notifications_screen.dart';
@@ -17,260 +19,259 @@ class _PlayerScreenState extends State<PlayerScreen> {
   bool _volumeOpen = false;
   double _volume = 80.0;
   bool _muted = false;
+  final RadioApiService _apiService = RadioApiService();
+  late Future<WeeklySchedule> _scheduleFuture;
 
-  final List<Map<String, dynamic>> _liveShows = [
-    {
-      'name': 'Moka',
-      'genre': 'Il buongiorno di Radio WAH',
-      'slot': '8:30 – 10:00',
-      'startHour': 8, 'startMinute': 30,
-      'endHour': 10, 'endMinute': 0,
-      'id': 'moka',
-      'image': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Ruby Tuesday',
-      'genre': 'Rock d’autore e rarità',
-      'slot': '10:00 – 12:30',
-      'startHour': 10, 'startMinute': 0,
-      'endHour': 12, 'endMinute': 30,
-      'id': 'ruby',
-      'image': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Funky Reload',
-      'genre': 'Funk, soul e disco',
-      'slot': '12:30 – 14:30',
-      'startHour': 12, 'startMinute': 30,
-      'endHour': 14, 'endMinute': 30,
-      'id': 'funky',
-      'image': 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Liquid',
-      'genre': 'Elettronica e ambient',
-      'slot': '14:30 – 17:30',
-      'startHour': 14, 'startMinute': 30,
-      'endHour': 17, 'endMinute': 30,
-      'id': 'liquid',
-      'image': 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Fresh Sounds',
-      'genre': 'Le novità della settimana',
-      'slot': '17:30 – 19:00',
-      'startHour': 17, 'startMinute': 30,
-      'endHour': 19, 'endMinute': 0,
-      'id': 'fresh',
-      'image': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _scheduleFuture = _apiService.fetchWeeklySchedule();
+  }
 
-  int _getCurrentLiveShowIndex() {
+  @override
+  void dispose() {
+    _apiService.dispose();
+    super.dispose();
+  }
+
+  ScheduleItem? _getCurrentShow(WeeklySchedule schedule) {
+    final todayIndex = (DateTime.now().weekday - 1).clamp(0, 6);
+    final dayKey = WeeklySchedule.dayOrder[todayIndex];
+    final items = schedule.days[dayKey] ?? [];
+
     final now = TimeOfDay.now();
     final nowMinutes = now.hour * 60 + now.minute;
 
-    for (int i = 0; i < _liveShows.length; i++) {
-      final show = _liveShows[i];
-      final startMin = show['startHour'] * 60 + show['startMinute'];
-      final endMin = show['endHour'] * 60 + show['endMinute'];
-      if (nowMinutes >= startMin && nowMinutes < endMin) {
-        return i;
+    for (final item in items) {
+      try {
+        final startParts = item.hourStart.split(':');
+        final endParts = item.hourEnd.split(':');
+        if (startParts.length < 2 || endParts.length < 2) continue;
+
+        final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+        final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+
+        if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
+          return item;
+        }
+      } catch (_) {
+        continue;
       }
     }
-    return 0;
+    return items.isNotEmpty ? items.first : null;
   }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<RadioPlayerController>();
     final appState = context.watch<RadioAppState>();
-    
-    final showIndex = appState.liveIndex > 0 ? appState.liveIndex : _getCurrentLiveShowIndex();
-    final show = _liveShows[showIndex];
-    final isFav = appState.isFav(show['id']!);
 
-    final artwork = controller.currentTrack.artworkLarge ??
-        controller.currentTrack.artworkSmall ??
-        show['image']!;
+    return FutureBuilder<WeeklySchedule>(
+      future: _scheduleFuture,
+      builder: (context, snapshot) {
+        final currentShow = snapshot.hasData ? _getCurrentShow(snapshot.data!) : null;
+        final showName = currentShow?.title ?? 'Caricamento...';
+        final showGenre = currentShow?.subtitle ?? '';
+        final showSlot = currentShow != null ? '${currentShow.hourStart} – ${currentShow.hourEnd}' : '';
+        final showImage = currentShow?.image;
+        final isFav = currentShow != null ? appState.isFav(currentShow.title) : false;
 
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 16),
-          child: GestureDetector(
-            onTap: () => appState.setNavIndex(4), // Go to Profile
-            child: CircleAvatar(
-              backgroundColor: const Color(0xFFF4F4F2),
-              foregroundColor: const Color(0xFF050506),
-              child: const Text('LF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+        final artwork = controller.currentTrack.artworkLarge ??
+            controller.currentTrack.artworkSmall ??
+            showImage ??
+            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80';
+
+        return Scaffold(
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            toolbarHeight: 100,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 20),
+              child: GestureDetector(
+                onTap: () => appState.setNavIndex(4),
+                child: CircleAvatar(
+                  backgroundColor: const Color(0xFFF4F4F2),
+                  foregroundColor: const Color(0xFF050506),
+                  child: const Text('LF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                ),
+              ),
             ),
-          ),
-        ),
-        title: Container(
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.6),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-              BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 2,
-                offset: Offset.zero,
-              ),
-            ],
-          ),
-          child: Image.asset(
-            'assets/logo.jpg',
-            height: 126,
-            width: 126,
-            fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Text(
-              'Radio WAH',
-              style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFC4D600)),
-            ),
-          ),
-        ),
-        centerTitle: true,
-        actions: [
-          Stack(
-            children: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                  );
-                },
-              ),
-              if (appState.unreadNotifications)
-                Positioned(
-                  right: 10,
-                  top: 10,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF33F0FF),
-                      shape: BoxShape.circle,
+            title: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.6),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 2,
+                      offset: Offset.zero,
+                    ),
+                  ],
+                ),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/logo.jpg',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: const Color(0xFFC4D600),
+                      child: const Center(
+                        child: Text(
+                          'Radio WAH',
+                          style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF050506), fontSize: 10),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                   ),
                 ),
+              ),
+            ),
+            centerTitle: true,
+            actions: [
+              Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      );
+                    },
+                  ),
+                  if (appState.unreadNotifications)
+                    Positioned(
+                      right: 10,
+                      top: 10,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF33F0FF),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+              if (currentShow != null)
+                IconButton(
+                  icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? const Color(0xFFC4D600) : Colors.white),
+                  onPressed: () => appState.toggleFav(currentShow.title),
+                ),
+              const SizedBox(width: 8),
             ],
           ),
-          IconButton(
-            icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? const Color(0xFFC4D600) : Colors.white),
-            onPressed: () => appState.toggleFav(show['id']!),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Stack(
-        children: [
-          BlurredArtworkBackground(artworkUrl: artwork),
-          const BlurredArtworkOverlay(),
-          SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return SingleChildScrollView(
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          const SizedBox(height: 8),
-                          // Live badge
-                          Container(
-                            height: 28,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF050506).withOpacity(0.5),
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFFC4D600),
-                                    shape: BoxShape.circle,
-                                  ),
+          body: Stack(
+            children: [
+              BlurredArtworkBackground(artworkUrl: artwork),
+              const BlurredArtworkOverlay(),
+              SafeArea(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              const SizedBox(height: 8),
+                              // Live badge
+                              Container(
+                                height: 28,
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF050506).withOpacity(0.5),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'IN ONDA ORA · ${show['slot']}',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.0,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          // Interactive Cover art
-                          GestureDetector(
-                            onTap: () => appState.nextLive(),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Image.network(
-                                artwork,
-                                width: 220,
-                                height: 220,
-                                fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) => Container(
-                                  width: 220,
-                                  height: 220,
-                                  color: const Color(0xFF1C1C1F),
-                                  child: const Icon(Icons.radio, size: 64, color: Color(0xFFC4D600)),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: const BoxDecoration(
+                                        color: Color(0xFFC4D600),
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'IN ONDA ORA · $showSlot',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 1.0,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          // Title & Genre
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        show['name']!,
-                                        style: const TextStyle(
-                                          fontSize: 28,
-                                          fontWeight: FontWeight.w800,
-                                          letterSpacing: -0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        show['genre']!,
-                                        style: const TextStyle(
-                                          fontSize: 15,
-                                          color: Color(0xFFA3A3A8),
-                                        ),
-                                      ),
-                                    ],
+                              const SizedBox(height: 20),
+                              // Interactive Cover art
+                              GestureDetector(
+                                onTap: () => appState.nextLive(),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Image.network(
+                                    artwork,
+                                    width: 220,
+                                    height: 220,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) => Container(
+                                      width: 220,
+                                      height: 220,
+                                      color: const Color(0xFF1C1C1F),
+                                      child: const Icon(Icons.radio, size: 64, color: Color(0xFFC4D600)),
+                                    ),
                                   ),
                                 ),
-                              ],
-                            ),
-                          ),
+                              ),
+                              const SizedBox(height: 20),
+                              // Title & Genre
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            showName,
+                                            style: const TextStyle(
+                                              fontSize: 28,
+                                              fontWeight: FontWeight.w800,
+                                              letterSpacing: -0.5,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            showGenre,
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              color: Color(0xFFA3A3A8),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           const SizedBox(height: 16),
                           // Currently playing track + equalizer
                           Row(
@@ -410,6 +411,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
           ),
         ],
       ),
+    );
+      },
     );
   }
 }

@@ -345,7 +345,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
             ),
             // Mini player above bottom bar as seen in prototype
-            const MiniPlayer(),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8),
+              child: MiniPlayer(),
+            ),
           ],
         ),
       ),
