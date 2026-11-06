@@ -110,13 +110,24 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ),
           ),
         ),
-        title: Image.network(
-          'https://radiowah.deloitte.it/wp-content/uploads/2024/03/logo-wah.png',
-          height: 40,
-          fit: BoxFit.contain,
-          errorBuilder: (_, __, ___) => const Text(
-            'Radio WAH',
-            style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFC4D600)),
+        title: Container(
+          decoration: BoxDecoration(
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.6),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Image.asset(
+            'assets/logo.jpg',
+            height: 84,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Text(
+              'Radio WAH',
+              style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFC4D600)),
+            ),
           ),
         ),
         centerTitle: true,
@@ -348,7 +359,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   IconButton(
-                                    icon: Icon(_volumeOpen ? Icons.volume_up : Icons.volume_down),
+                                         icon: Icon(_volumeOpen ? Icons.volume_up : Icons.volume_down),
                                     style: IconButton.styleFrom(
                                       backgroundColor: _volumeOpen ? Colors.white24 : Colors.transparent,
                                       minimumSize: const Size(44, 44),
