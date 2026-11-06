@@ -13,19 +13,21 @@ class BlurredArtworkBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: ClipRect(
-        child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 800),
-          child: artworkUrl == null
-              ? Container(key: const ValueKey('empty'), color: Colors.black)
-              : Image.network(
-                  artworkUrl!,
-                  key: ValueKey(artworkUrl),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  errorBuilder: (_, __, ___) => Container(color: Colors.black),
-                ),
+      child: IgnorePointer(
+        child: ClipRect(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 800),
+            child: artworkUrl == null
+                ? Container(key: const ValueKey('empty'), color: Colors.black)
+                : Image.network(
+                    artworkUrl!,
+                    key: ValueKey(artworkUrl),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                  ),
+          ),
         ),
       ),
     );
@@ -40,9 +42,11 @@ class BlurredArtworkOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned.fill(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-        child: Container(color: Colors.black.withValues(alpha: 0.55)),
+      child: IgnorePointer(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45),
+          child: Container(color: Colors.black.withValues(alpha: 0.55)),
+        ),
       ),
     );
   }

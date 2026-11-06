@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -311,92 +312,88 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             ],
                           ),
                           const SizedBox(height: 24),
-                          // Bottom Player Controls
-                          Stack(
-                            alignment: Alignment.bottomCenter,
-                            clipBehavior: Clip.none,
-                            children: [
-                              if (_volumeOpen)
-                                Positioned(
-                                  bottom: 84,
-                                  left: 0,
-                                  right: 0,
-                                  child: Container(
-                                    height: 52,
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF202024).withOpacity(0.85),
-                                      borderRadius: BorderRadius.circular(26),
-                                      border: Border.all(color: Colors.white.withOpacity(0.12)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(_muted ? Icons.volume_off : Icons.volume_up, size: 22),
-                                          onPressed: () => setState(() => _muted = !_muted),
-                                        ),
-                                        Expanded(
-                                          child: Slider(
-                                            value: _muted ? 0 : _volume,
-                                            min: 0,
-                                            max: 100,
-                                            activeColor: const Color(0xFFF4F4F2),
-                                            inactiveColor: Colors.white24,
-                                            onChanged: (val) {
-                                              setState(() {
-                                                _volume = val;
-                                                _muted = false;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        SizedBox(
-                                          width: 32,
-                                          child: Text(
-                                            '${_muted ? 0 : _volume.toInt()}',
-                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                            textAlign: TextAlign.right,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // Volume panel (outside Stack)
+                          if (_volumeOpen)
+                            Container(
+                              height: 52,
+                              margin: const EdgeInsets.only(bottom: 16),
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF202024).withOpacity(0.85),
+                                borderRadius: BorderRadius.circular(26),
+                                border: Border.all(color: Colors.white.withOpacity(0.12)),
+                              ),
+                              child: Row(
                                 children: [
                                   IconButton(
-                                         icon: Icon(_volumeOpen ? Icons.volume_up : Icons.volume_down),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor: _volumeOpen ? Colors.white24 : Colors.transparent,
-                                      minimumSize: const Size(44, 44),
-                                    ),
-                                    onPressed: () => setState(() => _volumeOpen = !_volumeOpen),
-                                  ),
-                                  SizedBox(
-                                    width: 76,
-                                    height: 76,
-                                    child: FloatingActionButton(
-                                      backgroundColor: const Color(0xFFC4D600),
-                                      foregroundColor: const Color(0xFF050506),
-                                      elevation: 10,
-                                      shape: const CircleBorder(),
-                                      onPressed: controller.togglePlayPause,
-                                      child: Icon(
-                                        controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                                        size: 36,
-                                      ),
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.cast),
+                                    icon: Icon(_muted ? Icons.volume_off : Icons.volume_up, size: 22),
                                     onPressed: () {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Uscita audio: Questo dispositivo')),
-                                      );
+                                      setState(() => _muted = !_muted);
+                                      controller.setVolume(_muted ? 0 : _volume);
                                     },
                                   ),
+                                  Expanded(
+                                    child: CupertinoSlider(
+                                      value: _volume,
+                                      min: 0,
+                                      max: 100,
+                                      activeColor: const Color(0xFFF4F4F2),
+                                      thumbColor: const Color(0xFFF4F4F2),
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _volume = val;
+                                        });
+                                        controller.setVolume(val);
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: 32,
+                                    child: Text(
+                                      '${_muted ? 0 : _volume.toInt()}',
+                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                      textAlign: TextAlign.right,
+                                    ),
+                                  ),
                                 ],
+                              ),
+                            ),
+                          // Bottom Player Controls
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                     icon: Icon(_volumeOpen ? Icons.volume_up : Icons.volume_down),
+                                style: IconButton.styleFrom(
+                                  backgroundColor: _volumeOpen ? Colors.white24 : Colors.transparent,
+                                  minimumSize: const Size(44, 44),
+                                ),
+                                onPressed: () {
+                                  setState(() => _volumeOpen = !_volumeOpen);
+                                },
+                              ),
+                              SizedBox(
+                                width: 76,
+                                height: 76,
+                                child: FloatingActionButton(
+                                  backgroundColor: const Color(0xFFC4D600),
+                                  foregroundColor: const Color(0xFF050506),
+                                  elevation: 10,
+                                  shape: const CircleBorder(),
+                                  onPressed: controller.togglePlayPause,
+                                  child: Icon(
+                                    controller.isPlaying ? Icons.pause : Icons.play_arrow,
+                                    size: 36,
+                                  ),
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.cast),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Uscita audio: Questo dispositivo')),
+                                  );
+                                },
                               ),
                             ],
                           ),

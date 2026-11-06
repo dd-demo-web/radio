@@ -116,6 +116,10 @@ class RadioPlayerController extends ChangeNotifier {
     }
   }
 
+  Future<void> setVolume(double volume) async {
+    await _audioPlayer.setVolume(volume / 100);
+  }
+
   @override
   void dispose() {
     _metadataTimer?.cancel();
