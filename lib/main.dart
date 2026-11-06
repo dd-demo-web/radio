@@ -36,6 +36,11 @@ class RadioWahApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RadioAppState()),
+        ChangeNotifierProvider(create: (_) {
+          final controller = RadioPlayerController();
+          controller.init();
+          return controller;
+        }),
       ],
       child: MaterialApp(
         title: 'Radio WAH',
@@ -63,41 +68,18 @@ class RadioWahApp extends StatelessWidget {
   }
 }
 
-class MainNavigationShell extends StatefulWidget {
+class MainNavigationShell extends StatelessWidget {
   const MainNavigationShell({super.key});
-
-  @override
-  State<MainNavigationShell> createState() => _MainNavigationShellState();
-}
-
-class _MainNavigationShellState extends State<MainNavigationShell> {
-  late final RadioPlayerController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = RadioPlayerController();
-    _controller.init();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<RadioAppState>();
-    final screens = [
-      ChangeNotifierProvider.value(
-        value: _controller,
-        child: const PlayerScreen(),
-      ),
-      const ScheduleScreen(),
-      const DiscoverScreen(),
-      const FavoritesScreen(),
-      const ProfileScreen(),
+    const screens = [
+      PlayerScreen(),
+      ScheduleScreen(),
+      DiscoverScreen(),
+      FavoritesScreen(),
+      ProfileScreen(),
     ];
 
     return Scaffold(

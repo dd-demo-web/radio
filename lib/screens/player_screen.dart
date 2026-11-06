@@ -18,52 +18,78 @@ class _PlayerScreenState extends State<PlayerScreen> {
   double _volume = 80.0;
   bool _muted = false;
 
-  final List<Map<String, String>> _liveShows = [
+  final List<Map<String, dynamic>> _liveShows = [
     {
-      'name': 'Fresh Sounds',
-      'genre': 'Le novità della settimana',
+      'name': 'Moka',
+      'genre': 'Il buongiorno di Radio WAH',
       'slot': '8:30 – 10:00',
-      'id': 'fresh',
-      'image': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+      'startHour': 8, 'startMinute': 30,
+      'endHour': 10, 'endMinute': 0,
+      'id': 'moka',
+      'image': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80',
+    },
+    {
+      'name': 'Ruby Tuesday',
+      'genre': 'Rock d’autore e rarità',
+      'slot': '10:00 – 12:30',
+      'startHour': 10, 'startMinute': 0,
+      'endHour': 12, 'endMinute': 30,
+      'id': 'ruby',
+      'image': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80',
     },
     {
       'name': 'Funky Reload',
       'genre': 'Funk, soul e disco',
-      'slot': '12:30 – 14:00',
+      'slot': '12:30 – 14:30',
+      'startHour': 12, 'startMinute': 30,
+      'endHour': 14, 'endMinute': 30,
       'id': 'funky',
       'image': 'https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=600&auto=format&fit=crop&q=80',
     },
     {
       'name': 'Liquid',
       'genre': 'Elettronica e ambient',
-      'slot': '16:00 – 17:30',
+      'slot': '14:30 – 17:30',
+      'startHour': 14, 'startMinute': 30,
+      'endHour': 17, 'endMinute': 30,
       'id': 'liquid',
       'image': 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80',
     },
     {
-      'name': 'Ruby Tuesday',
-      'genre': 'Rock d’autore e rarità',
-      'slot': '10:00 – 12:00',
-      'id': 'ruby',
-      'image': 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&auto=format&fit=crop&q=80',
-    },
-    {
-      'name': 'Moka',
-      'genre': 'Il buongiorno di Radio WAH',
-      'slot': '8:30 – 10:00',
-      'id': 'moka',
-      'image': 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?w=600&auto=format&fit=crop&q=80',
+      'name': 'Fresh Sounds',
+      'genre': 'Le novità della settimana',
+      'slot': '17:30 – 19:00',
+      'startHour': 17, 'startMinute': 30,
+      'endHour': 19, 'endMinute': 0,
+      'id': 'fresh',
+      'image': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
     },
   ];
+
+  int _getCurrentLiveShowIndex() {
+    final now = TimeOfDay.now();
+    final nowMinutes = now.hour * 60 + now.minute;
+
+    for (int i = 0; i < _liveShows.length; i++) {
+      final show = _liveShows[i];
+      final startMin = show['startHour'] * 60 + show['startMinute'];
+      final endMin = show['endHour'] * 60 + show['endMinute'];
+      if (nowMinutes >= startMin && nowMinutes < endMin) {
+        return i;
+      }
+    }
+    return 0;
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<RadioPlayerController>();
     final appState = context.watch<RadioAppState>();
-    final show = _liveShows[appState.liveIndex];
+    
+    final showIndex = appState.liveIndex > 0 ? appState.liveIndex : _getCurrentLiveShowIndex();
+    final show = _liveShows[showIndex];
     final isFav = appState.isFav(show['id']!);
 
-    // Recupera la copertina del brano corrente dall'API (o fallback sullo show live)
     final artwork = controller.currentTrack.artworkLarge ??
         controller.currentTrack.artworkSmall ??
         show['image']!;
@@ -86,8 +112,12 @@ class _PlayerScreenState extends State<PlayerScreen> {
         ),
         title: Image.network(
           'https://radiowah.deloitte.it/wp-content/uploads/2024/03/logo-wah.png',
-          height: 36,
-          errorBuilder: (_, __, ___) => const Text('Radio WAH', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFC4D600))),
+          height: 40,
+          fit: BoxFit.contain,
+          errorBuilder: (_, __, ___) => const Text(
+            'Radio WAH',
+            style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFFC4D600)),
+          ),
         ),
         centerTitle: true,
         actions: [
@@ -172,7 +202,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                             ),
                           ),
                           const SizedBox(height: 20),
-                          // Interactive Cover art (tapping switches live program)
+                          // Interactive Cover art
                           GestureDetector(
                             onTap: () => appState.nextLive(),
                             child: ClipRRect(
@@ -332,6 +362,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       backgroundColor: const Color(0xFFC4D600),
                                       foregroundColor: const Color(0xFF050506),
                                       elevation: 10,
+                                      shape: const CircleBorder(),
                                       onPressed: controller.togglePlayPause,
                                       child: Icon(
                                         controller.isPlaying ? Icons.pause : Icons.play_arrow,

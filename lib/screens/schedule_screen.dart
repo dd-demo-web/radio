@@ -4,17 +4,8 @@ import 'package:provider/provider.dart';
 import '../models/app_state.dart';
 import '../models/schedule.dart';
 import '../services/radio_api_service.dart';
+import '../widgets/mini_player.dart';
 import 'notifications_screen.dart';
-
-const List<Map<String, String>> _daysData = [
-  {'short': 'LUN', 'num': '26'},
-  {'short': 'MAR', 'num': '27'},
-  {'short': 'MER', 'num': '28'},
-  {'short': 'GIO', 'num': '29'},
-  {'short': 'VEN', 'num': '30'},
-  {'short': 'SAB', 'num': '31'},
-  {'short': 'DOM', 'num': '1'},
-];
 
 class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
@@ -40,10 +31,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     super.dispose();
   }
 
+  List<Map<String, String>> _getDaysOfWeek() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    const shortLabels = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'];
+
+    return List.generate(7, (i) {
+      final day = monday.add(Duration(days: i));
+      return {
+        'short': shortLabels[i],
+        'num': day.day.toString(),
+      };
+    });
+  }
+
+  bool _isItemOnAir(ScheduleItem item, int dayIndex, int todayIndex) {
+    if (dayIndex != todayIndex) return false;
+    try {
+      final now = TimeOfDay.now();
+      final startParts = item.hourStart.split(':');
+      final endParts = item.hourEnd.split(':');
+      if (startParts.length < 2 || endParts.length < 2) return false;
+
+      final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+      final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
+      final nowMinutes = now.hour * 60 + now.minute;
+
+      return nowMinutes >= startMinutes && nowMinutes < endMinutes;
+    } catch (_) {
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = context.watch<RadioAppState>();
     final todayIndex = (DateTime.now().weekday - 1).clamp(0, 6);
+    final daysData = _getDaysOfWeek();
 
     return Scaffold(
       body: SafeArea(
@@ -80,23 +104,23 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Settimana 26 ott – 1 nov · dirette dalle 8:30 alle 18:30',
+                'Palinsesto settimanale · dirette dalle 8:30 alle 18:30',
                 style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A8)),
               ),
             ),
             const SizedBox(height: 16),
-            // Day selector tabs
+            // Day selector tabs (Dynamic dates)
             SizedBox(
               height: 68,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _daysData.length,
+                itemCount: daysData.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final isSelected = index == _selectedDayIndex;
                   final isToday = index == todayIndex;
-                  final day = _daysData[index];
+                  final day = daysData[index];
                   return GestureDetector(
                     onTap: () => setState(() => _selectedDayIndex = index),
                     child: Container(
@@ -162,8 +186,18 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     );
                   }
                   final schedule = snapshot.data!;
-                  final dayKey = WeeklySchedule.dayOrder[_selectedDayIndex];
-                  final items = schedule.days[dayKey] ?? [];
+                  final dayKey = WeeklySchedule.dayOrder.length > _selectedDayIndex
+                      ? WeeklySchedule.dayOrder[_selectedDayIndex]
+                      : '';
+                  List<ScheduleItem> items = schedule.days[dayKey] ?? [];
+                  if (items.isEmpty && schedule.days.isNotEmpty) {
+                    final keys = schedule.days.keys.toList();
+                    if (_selectedDayIndex < keys.length) {
+                      items = schedule.days[keys[_selectedDayIndex]] ?? [];
+                    } else {
+                      items = schedule.days.values.first;
+                    }
+                  }
 
                   if (items.isEmpty) {
                     return Center(
@@ -200,13 +234,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   }
 
                   return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 100),
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
                     itemCount: items.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 4),
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      final isLive = _selectedDayIndex == todayIndex && item.title.toLowerCase().contains('fresh');
-                      final isPast = _selectedDayIndex < todayIndex;
+                      final isLive = _isItemOnAir(item, _selectedDayIndex, todayIndex);
                       final isFav = appState.isFav(item.title);
 
                       return Container(
@@ -276,11 +309,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                               'IN ONDA ORA',
                                               style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFC4D600)),
                                             ),
-                                          if (isPast)
-                                            const Text(
-                                              'RIASCOLTA',
-                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF33F0FF)),
-                                            ),
                                           Text(
                                             item.title,
                                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
@@ -316,6 +344,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 },
               ),
             ),
+            // Mini player above bottom bar as seen in prototype
+            const MiniPlayer(),
           ],
         ),
       ),

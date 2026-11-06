@@ -17,11 +17,11 @@ class ScheduleItem {
 
   factory ScheduleItem.fromJson(Map<String, dynamic> json) {
     return ScheduleItem(
-      hourStart: (json['hour_start'] ?? '').toString(),
-      hourEnd: (json['hour_end'] ?? '').toString(),
-      title: (json['title'] ?? '').toString(),
-      subtitle: (json['subtitle'] ?? '').toString(),
-      image: json['thumbnail']?.toString(),
+      hourStart: (json['hour_start'] ?? json['start'] ?? '').toString(),
+      hourEnd: (json['hour_end'] ?? json['end'] ?? '').toString(),
+      title: (json['title'] ?? json['name'] ?? '').toString(),
+      subtitle: (json['subtitle'] ?? json['description'] ?? '').toString(),
+      image: json['thumbnail']?.toString() ?? json['image']?.toString(),
       date: json['date']?.toString(),
     );
   }
@@ -43,8 +43,8 @@ class WeeklySchedule {
   ];
 
   factory WeeklySchedule.fromJson(Map<String, dynamic> json) {
-    final result = json['result'] as Map<String, dynamic>? ?? {};
-    final daysJson = result['days'] as Map<String, dynamic>? ?? {};
+    final result = json['result'] as Map<String, dynamic>? ?? json;
+    final daysJson = result['days'] as Map<String, dynamic>? ?? result;
     final days = <String, List<ScheduleItem>>{};
     daysJson.forEach((key, value) {
       if (value is List) {
