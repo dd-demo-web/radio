@@ -38,11 +38,30 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
     return List.generate(7, (i) {
       final day = monday.add(Duration(days: i));
-      return {
-        'short': shortLabels[i],
-        'num': day.day.toString(),
-      };
+      return {'short': shortLabels[i], 'num': day.day.toString()};
     });
+  }
+
+  String _getWeekRangeLabel() {
+    final now = DateTime.now();
+    final monday = now.subtract(Duration(days: now.weekday - 1));
+    final sunday = monday.add(const Duration(days: 6));
+    const months = [
+      'gen',
+      'feb',
+      'mar',
+      'apr',
+      'mag',
+      'giu',
+      'lug',
+      'ago',
+      'set',
+      'ott',
+      'nov',
+      'dic',
+    ];
+
+    return 'Settimana ${monday.day} ${months[monday.month - 1]} – ${sunday.day} ${months[sunday.month - 1]} · dirette dalle 8:30 alle 18:30';
   }
 
   bool _isItemOnAir(ScheduleItem item, int dayIndex, int todayIndex) {
@@ -53,7 +72,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       final endParts = item.hourEnd.split(':');
       if (startParts.length < 2 || endParts.length < 2) return false;
 
-      final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+      final startMinutes =
+          int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
       final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
       final nowMinutes = now.hour * 60 + now.minute;
 
@@ -82,7 +102,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 children: [
                   const Text(
                     'Palinsesto',
-                    style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
+                    ),
                   ),
                   Row(
                     children: [
@@ -97,7 +121,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         IconButton(
                           icon: const Icon(Icons.notifications_outlined),
                           onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const NotificationsScreen(),
+                            ),
                           ),
                         )
                       else
@@ -107,11 +133,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                 ],
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Text(
-                'Palinsesto settimanale · dirette dalle 8:30 alle 18:30',
-                style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A8)),
+                _getWeekRangeLabel(),
+                style: const TextStyle(fontSize: 12, color: Color(0xFFA3A3A8)),
               ),
             ),
             const SizedBox(height: 16),
@@ -132,10 +158,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     child: Container(
                       width: 52,
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFF4F4F2) : Colors.transparent,
+                        color: isSelected
+                            ? const Color(0xFFF4F4F2)
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFFF4F4F2) : const Color(0xFF2A2A2E),
+                          color: isSelected
+                              ? const Color(0xFFF4F4F2)
+                              : const Color(0xFF2A2A2E),
                         ),
                       ),
                       child: Column(
@@ -147,7 +177,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.8,
-                              color: isSelected ? const Color(0xFF050506) : (index > 4 ? const Color(0xFF76767C) : const Color(0xFFF4F4F2)),
+                              color: isSelected
+                                  ? const Color(0xFF050506)
+                                  : (index > 4
+                                        ? const Color(0xFF76767C)
+                                        : const Color(0xFFF4F4F2)),
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -156,7 +190,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: isSelected ? const Color(0xFF050506) : Colors.white,
+                              color: isSelected
+                                  ? const Color(0xFF050506)
+                                  : Colors.white,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -166,7 +202,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isToday
-                                  ? (isSelected ? const Color(0xFF050506) : const Color(0xFFC4D600))
+                                  ? (isSelected
+                                        ? const Color(0xFF050506)
+                                        : const Color(0xFFC4D600))
                                   : Colors.transparent,
                             ),
                           ),
@@ -192,7 +230,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     );
                   }
                   final schedule = snapshot.data!;
-                  final dayKey = WeeklySchedule.dayOrder.length > _selectedDayIndex
+                  final dayKey =
+                      WeeklySchedule.dayOrder.length > _selectedDayIndex
                       ? WeeklySchedule.dayOrder[_selectedDayIndex]
                       : '';
                   List<ScheduleItem> items = schedule.days[dayKey] ?? [];
@@ -214,24 +253,40 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                           children: [
                             const Text(
                               'Weekend in silenzio',
-                              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                             const SizedBox(height: 12),
                             const Text(
                               'Lo studio riapre lunedì alle 8:30 con Moka. Intanto la musica non si ferma: i mixtape girano 24/7.',
                               textAlign: TextAlign.center,
-                              style: TextStyle(fontSize: 15, color: Color(0xFFA3A3A8), height: 1.4),
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Color(0xFFA3A3A8),
+                                height: 1.4,
+                              ),
                             ),
                             const SizedBox(height: 16),
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFF4F4F2),
                                 foregroundColor: const Color(0xFF050506),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                                padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 22,
+                                  vertical: 14,
+                                ),
                               ),
-                              onPressed: () => appState.setNavIndex(2), // Discover
-                              child: const Text('Apri i mixtape', style: TextStyle(fontWeight: FontWeight.w800)),
+                              onPressed: () =>
+                                  appState.setNavIndex(2), // Discover
+                              child: const Text(
+                                'Apri i mixtape',
+                                style: TextStyle(fontWeight: FontWeight.w800),
+                              ),
                             ),
                           ],
                         ),
@@ -245,15 +300,30 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     separatorBuilder: (_, __) => const SizedBox(height: 4),
                     itemBuilder: (context, index) {
                       final item = items[index];
-                      final isLive = _isItemOnAir(item, _selectedDayIndex, todayIndex);
+                      final isLive = _isItemOnAir(
+                        item,
+                        _selectedDayIndex,
+                        todayIndex,
+                      );
                       final isFav = appState.isFav(item.title);
 
                       return Container(
-                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 12,
+                          horizontal: 10,
+                        ),
                         decoration: BoxDecoration(
-                          color: isLive ? const Color(0xFF1A2A14) : Colors.transparent,
+                          color: isLive
+                              ? const Color(0xFF1A2A14)
+                              : Colors.transparent,
                           borderRadius: BorderRadius.circular(16),
-                          border: isLive ? Border.all(color: const Color(0xFFC4D600).withOpacity(0.55)) : null,
+                          border: isLive
+                              ? Border.all(
+                                  color: const Color(
+                                    0xFFC4D600,
+                                  ).withOpacity(0.55),
+                                )
+                              : null,
                         ),
                         child: Row(
                           children: [
@@ -269,15 +339,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                     SizedBox(
                                       width: 44,
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             item.hourStart,
-                                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                           Text(
                                             item.hourEnd,
-                                            style: const TextStyle(fontSize: 12, color: Color(0xFF8E8E94)),
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Color(0xFF8E8E94),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -291,40 +368,60 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                               width: 60,
                                               height: 60,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) => Container(
-                                                width: 60,
-                                                height: 60,
-                                                color: const Color(0xFF1C1C1F),
-                                                child: const Icon(Icons.radio, color: Color(0xFFC4D600)),
-                                              ),
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                    width: 60,
+                                                    height: 60,
+                                                    color: const Color(
+                                                      0xFF1C1C1F,
+                                                    ),
+                                                    child: const Icon(
+                                                      Icons.radio,
+                                                      color: Color(0xFFC4D600),
+                                                    ),
+                                                  ),
                                             )
                                           : Container(
                                               width: 60,
                                               height: 60,
                                               color: const Color(0xFF1C1C1F),
-                                              child: const Icon(Icons.radio, color: Color(0xFFC4D600)),
+                                              child: const Icon(
+                                                Icons.radio,
+                                                color: Color(0xFFC4D600),
+                                              ),
                                             ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           if (isLive)
                                             const Text(
                                               'IN ONDA ORA',
-                                              style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFFC4D600)),
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: Color(0xFFC4D600),
+                                              ),
                                             ),
                                           Text(
                                             item.title,
-                                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                           if (item.subtitle.isNotEmpty)
                                             Text(
                                               item.subtitle,
-                                              style: const TextStyle(fontSize: 13, color: Color(0xFFA3A3A8)),
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                color: Color(0xFFA3A3A8),
+                                              ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
@@ -338,13 +435,15 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             if (RadioAppState.showFavoriteIcon)
                               IconButton(
                                 icon: Icon(
-                                  isFav ? Icons.favorite : Icons.favorite_border,
-                                  color: isFav ? const Color(0xFFC4D600) : const Color(0xFFA3A3A8),
+                                  isFav
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color: isFav
+                                      ? const Color(0xFFC4D600)
+                                      : const Color(0xFFA3A3A8),
                                 ),
                                 onPressed: () => appState.toggleFav(item.title),
-                              )
-                            else
-                              const SizedBox(width: 48),
+                              ),
                           ],
                         ),
                       );

@@ -49,7 +49,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
         final endParts = item.hourEnd.split(':');
         if (startParts.length < 2 || endParts.length < 2) continue;
 
-        final startMinutes = int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
+        final startMinutes =
+            int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
         final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
 
         if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
@@ -70,14 +71,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
     return FutureBuilder<WeeklySchedule>(
       future: _scheduleFuture,
       builder: (context, snapshot) {
-        final currentShow = snapshot.hasData ? _getCurrentShow(snapshot.data!) : null;
+        final currentShow = snapshot.hasData
+            ? _getCurrentShow(snapshot.data!)
+            : null;
         final showName = currentShow?.title ?? 'Caricamento...';
         final showGenre = currentShow?.subtitle ?? '';
-        final showSlot = currentShow != null ? '${currentShow.hourStart} – ${currentShow.hourEnd}' : '';
+        final showSlot = currentShow != null
+            ? '${currentShow.hourStart} – ${currentShow.hourEnd}'
+            : '';
         final showImage = currentShow?.image;
-        final isFav = currentShow != null ? appState.isFav(currentShow.title) : false;
+        final isFav = currentShow != null
+            ? appState.isFav(currentShow.title)
+            : false;
 
-        final artwork = controller.currentTrack.artworkLarge ??
+        final artwork =
+            controller.currentTrack.artworkLarge ??
             controller.currentTrack.artworkSmall ??
             showImage ??
             'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80';
@@ -96,45 +104,31 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       child: CircleAvatar(
                         backgroundColor: const Color(0xFFF4F4F2),
                         foregroundColor: const Color(0xFF050506),
-                        child: const Text('LF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                        child: const Text(
+                          'LF',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                        ),
                       ),
                     ),
                   )
                 : null,
             title: Padding(
-              padding: const EdgeInsets.only(top: 20),
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.6),
-                      blurRadius: 10,
-                      offset: const Offset(0, 2),
-                    ),
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 2,
-                      offset: Offset.zero,
-                    ),
-                  ],
-                ),
-                child: ClipOval(
-                  child: Image.asset(
-                    'assets/logo.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: const Color(0xFFC4D600),
-                      child: const Center(
-                        child: Text(
-                          'Radio WAH',
-                          style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF050506), fontSize: 10),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
+              padding: const EdgeInsets.only(top: 16),
+              child: Image.asset(
+                'assets/logo.jpg',
+                width: 126,
+                height: 92,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                errorBuilder: (_, __, ___) => const Text(
+                  'Radio WAH',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFFC4D600),
+                    fontSize: 16,
                   ),
                 ),
               ),
@@ -147,9 +141,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   onPressed: () {
                     // TODO: Implement search functionality
                   },
-                )
-              else
-                const SizedBox(width: 48),
+                ),
               if (RadioAppState.showNotifications)
                 Stack(
                   children: [
@@ -157,7 +149,9 @@ class _PlayerScreenState extends State<PlayerScreen> {
                       icon: const Icon(Icons.notifications_outlined),
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const NotificationsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -175,17 +169,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
                         ),
                       ),
                   ],
-                )
-              else
-                const SizedBox(width: 48),
+                ),
               if (RadioAppState.showFavoriteIcon && currentShow != null)
                 IconButton(
-                  icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? const Color(0xFFC4D600) : Colors.white),
+                  icon: Icon(
+                    isFav ? Icons.favorite : Icons.favorite_border,
+                    color: isFav ? const Color(0xFFC4D600) : Colors.white,
+                  ),
                   onPressed: () => appState.toggleFav(currentShow.title),
-                )
-              else
-                const SizedBox(width: 48),
-              const SizedBox(width: 8),
+                ),
             ],
           ),
           body: Stack(
@@ -197,9 +189,14 @@ class _PlayerScreenState extends State<PlayerScreen> {
                   builder: (context, constraints) {
                     return SingleChildScrollView(
                       child: ConstrainedBox(
-                        constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                        constraints: BoxConstraints(
+                          minHeight: constraints.maxHeight,
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
@@ -207,9 +204,13 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               // Live badge
                               Container(
                                 height: 28,
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFF050506).withOpacity(0.5),
+                                  color: const Color(
+                                    0xFF050506,
+                                  ).withOpacity(0.5),
                                   borderRadius: BorderRadius.circular(14),
                                 ),
                                 child: Row(
@@ -241,7 +242,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               GestureDetector(
                                 onTap: () => appState.nextLive(),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(8),
                                   child: Image.network(
                                     artwork,
                                     width: 220,
@@ -251,7 +252,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                       width: 220,
                                       height: 220,
                                       color: const Color(0xFF1C1C1F),
-                                      child: const Icon(Icons.radio, size: 64, color: Color(0xFFC4D600)),
+                                      child: const Icon(
+                                        Icons.radio,
+                                        size: 64,
+                                        color: Color(0xFFC4D600),
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -259,13 +264,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               const SizedBox(height: 20),
                               // Title & Genre
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             showName,
@@ -289,145 +298,185 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   ],
                                 ),
                               ),
-                          const SizedBox(height: 16),
-                          // Currently playing track + equalizer
-                          Row(
-                            children: [
-                              _Equalizer(isPlaying: controller.isPlaying),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      controller.currentTrack.title.isNotEmpty
-                                          ? controller.currentTrack.title
-                                          : 'Rotazione musicale continua',
-                                      style: const TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      controller.currentTrack.artist.isNotEmpty
-                                          ? controller.currentTrack.artist
-                                          : 'Radio WAH Selection',
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Color(0xFFA3A3A8),
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          // Volume panel (outside Stack)
-                          if (_volumeOpen)
-                            Container(
-                              height: 52,
-                              margin: const EdgeInsets.only(bottom: 16),
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF202024).withOpacity(0.85),
-                                borderRadius: BorderRadius.circular(26),
-                                border: Border.all(color: Colors.white.withOpacity(0.12)),
-                              ),
-                              child: Row(
+                              const SizedBox(height: 16),
+                              // Currently playing track + equalizer
+                              Row(
                                 children: [
-                                  IconButton(
-                                    icon: Icon(_muted ? Icons.volume_off : Icons.volume_up, size: 22),
-                                    onPressed: () {
-                                      setState(() => _muted = !_muted);
-                                      controller.setVolume(_muted ? 0 : _volume);
-                                    },
-                                  ),
+                                  _Equalizer(isPlaying: controller.isPlaying),
+                                  const SizedBox(width: 12),
                                   Expanded(
-                                    child: CupertinoSlider(
-                                      value: _volume,
-                                      min: 0,
-                                      max: 100,
-                                      activeColor: const Color(0xFFF4F4F2),
-                                      thumbColor: const Color(0xFFF4F4F2),
-                                      onChanged: (val) {
-                                        setState(() {
-                                          _volume = val;
-                                        });
-                                        controller.setVolume(val);
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(
-                                    width: 32,
-                                    child: Text(
-                                      '${_muted ? 0 : _volume.toInt()}',
-                                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                      textAlign: TextAlign.right,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          controller
+                                                  .currentTrack
+                                                  .title
+                                                  .isNotEmpty
+                                              ? controller.currentTrack.title
+                                              : 'Rotazione musicale continua',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          controller
+                                                  .currentTrack
+                                                  .artist
+                                                  .isNotEmpty
+                                              ? controller.currentTrack.artist
+                                              : 'Radio WAH Selection',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFFA3A3A8),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          // Bottom Player Controls
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                     icon: Icon(_volumeOpen ? Icons.volume_up : Icons.volume_down),
-                                style: IconButton.styleFrom(
-                                  backgroundColor: _volumeOpen ? Colors.white24 : Colors.transparent,
-                                  minimumSize: const Size(44, 44),
-                                ),
-                                onPressed: () {
-                                  setState(() => _volumeOpen = !_volumeOpen);
-                                },
-                              ),
-                              SizedBox(
-                                width: 76,
-                                height: 76,
-                                child: FloatingActionButton(
-                                  backgroundColor: const Color(0xFFC4D600),
-                                  foregroundColor: const Color(0xFF050506),
-                                  elevation: 10,
-                                  shape: const CircleBorder(),
-                                  onPressed: controller.togglePlayPause,
-                                  child: Icon(
-                                    controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                                    size: 36,
+                              const SizedBox(height: 24),
+                              // Volume panel (outside Stack)
+                              if (_volumeOpen)
+                                Container(
+                                  height: 52,
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFF202024,
+                                    ).withOpacity(0.85),
+                                    borderRadius: BorderRadius.circular(26),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.12),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          _muted
+                                              ? Icons.volume_off
+                                              : Icons.volume_up,
+                                          size: 22,
+                                        ),
+                                        onPressed: () {
+                                          setState(() => _muted = !_muted);
+                                          controller.setVolume(
+                                            _muted ? 0 : _volume,
+                                          );
+                                        },
+                                      ),
+                                      Expanded(
+                                        child: CupertinoSlider(
+                                          value: _volume,
+                                          min: 0,
+                                          max: 100,
+                                          activeColor: const Color(0xFFF4F4F2),
+                                          thumbColor: const Color(0xFFF4F4F2),
+                                          onChanged: (val) {
+                                            setState(() {
+                                              _volume = val;
+                                            });
+                                            controller.setVolume(val);
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 32,
+                                        child: Text(
+                                          '${_muted ? 0 : _volume.toInt()}',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          textAlign: TextAlign.right,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
+                              // Bottom Player Controls
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      _volumeOpen
+                                          ? Icons.volume_up
+                                          : Icons.volume_down,
+                                    ),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: _volumeOpen
+                                          ? Colors.white24
+                                          : Colors.transparent,
+                                      minimumSize: const Size(44, 44),
+                                    ),
+                                    onPressed: () {
+                                      setState(
+                                        () => _volumeOpen = !_volumeOpen,
+                                      );
+                                    },
+                                  ),
+                                  SizedBox(
+                                    width: 76,
+                                    height: 76,
+                                    child: FloatingActionButton(
+                                      backgroundColor: const Color(0xFFC4D600),
+                                      foregroundColor: const Color(0xFF050506),
+                                      elevation: 10,
+                                      shape: const CircleBorder(),
+                                      onPressed: controller.togglePlayPause,
+                                      child: Icon(
+                                        controller.isPlaying
+                                            ? Icons.pause
+                                            : Icons.play_arrow,
+                                        size: 36,
+                                      ),
+                                    ),
+                                  ),
+                                  if (RadioAppState.showCastIcon)
+                                    IconButton(
+                                      icon: const Icon(Icons.cast),
+                                      onPressed: () {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Uscita audio: Questo dispositivo',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  else
+                                    const SizedBox(width: 48),
+                                ],
                               ),
-                              if (RadioAppState.showCastIcon)
-                                IconButton(
-                                  icon: const Icon(Icons.cast),
-                                  onPressed: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Uscita audio: Questo dispositivo')),
-                                    );
-                                  },
-                                )
-                              else
-                                const SizedBox(width: 48),
+                              const SizedBox(height: 16),
                             ],
                           ),
-                          const SizedBox(height: 16),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
       },
     );
   }

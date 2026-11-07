@@ -1,3 +1,5 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,7 +18,9 @@ void main() {
 class RadioWahColors {
   RadioWahColors._();
 
-  static const Color deloitteGreen = Color(0xFFC4D600); // Matches prototype #C4D600
+  static const Color deloitteGreen = Color(
+    0xFFC4D600,
+  ); // Matches prototype #C4D600
   static const Color accentGreen = Color(0xFF27890D);
   static const Color black = Color(0xFF050506); // Matches prototype #050506
   static const Color surface = Color(0xFF121214);
@@ -36,11 +40,13 @@ class RadioWahApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RadioAppState()),
-        ChangeNotifierProvider(create: (_) {
-          final controller = RadioPlayerController();
-          controller.init();
-          return controller;
-        }),
+        ChangeNotifierProvider(
+          create: (_) {
+            final controller = RadioPlayerController();
+            controller.init();
+            return controller;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'Radio WAH',
@@ -81,61 +87,124 @@ class MainNavigationShell extends StatelessWidget {
       FavoritesScreen(),
       ProfileScreen(),
     ];
+    final navItems = [
+      (label: 'Live', icon: Icons.radio, enabled: true),
+      (label: 'Palinsesto', icon: Icons.calendar_today, enabled: true),
+      (
+        label: 'Discover',
+        icon: Icons.explore,
+        enabled: RadioAppState.enableDiscoverTab,
+      ),
+      (
+        label: 'Preferiti',
+        icon: Icons.favorite_border,
+        enabled: RadioAppState.enableFavoritesTab,
+      ),
+      (
+        label: 'Profilo',
+        icon: Icons.person_outline,
+        enabled: RadioAppState.enableProfileTab,
+      ),
+    ];
+
+    Widget navigationItem(int index) {
+      final item = navItems[index];
+      final isSelected = appState.currentNavIndex == index;
+      final foreground = !item.enabled
+          ? const Color(0xFF48484D)
+          : isSelected
+          ? const Color(0xFFF4F4F2)
+          : const Color(0xFFB4B4BA);
+
+      return Expanded(
+        child: Semantics(
+          button: true,
+          enabled: item.enabled,
+          selected: isSelected,
+          label: item.label,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(26),
+                onTap: item.enabled ? () => appState.setNavIndex(index) : null,
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.12)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(26),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        item.icon,
+                        size: 22,
+                        color: isSelected && item.enabled
+                            ? const Color(0xFFC4D600)
+                            : foreground,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: foreground,
+                          fontSize: 10,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
-      body: IndexedStack(
-        index: appState.currentNavIndex,
-        children: screens,
-      ),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF050506),
-          border: Border(top: BorderSide(color: Color(0xFF1F1F23), width: 0.5)),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: appState.currentNavIndex,
-          onTap: (index) {
-            if (index == 2 && !RadioAppState.enableDiscoverTab) return;
-            if (index == 3 && !RadioAppState.enableFavoritesTab) return;
-            if (index == 4 && !RadioAppState.enableProfileTab) return;
-            appState.setNavIndex(index);
-          },
-          backgroundColor: const Color(0xFF050506),
-          selectedItemColor: const Color(0xFFC4D600),
-          unselectedItemColor: const Color(0xFF8E8E94),
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.radio),
-              label: 'Live',
-            ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_today),
-              label: 'Palinsesto',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.explore,
-                color: RadioAppState.enableDiscoverTab ? null : const Color(0xFF3A3A3C),
+      body: IndexedStack(index: appState.currentNavIndex, children: screens),
+      bottomNavigationBar: SafeArea(
+        top: false,
+        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+            child: Container(
+              height: 64,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              decoration: BoxDecoration(
+                color: const Color(0xA6202024),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    blurRadius: 28,
+                    offset: const Offset(0, 10),
+                  ),
+                  BoxShadow(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    blurRadius: 1,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
               ),
-              label: 'Discover',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.favorite_border,
-                color: RadioAppState.enableFavoritesTab ? null : const Color(0xFF3A3A3C),
+              child: Row(
+                children: List.generate(navItems.length, navigationItem),
               ),
-              label: 'Preferiti',
             ),
-            BottomNavigationBarItem(
-              icon: Icon(
-                Icons.person_outline,
-                color: RadioAppState.enableProfileTab ? null : const Color(0xFF3A3A3C),
-              ),
-              label: 'Profilo',
-            ),
-          ],
+          ),
         ),
       ),
     );

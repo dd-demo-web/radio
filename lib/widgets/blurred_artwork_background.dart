@@ -25,7 +25,8 @@ class BlurredArtworkBackground extends StatelessWidget {
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
-                    errorBuilder: (_, __, ___) => Container(color: Colors.black),
+                    errorBuilder: (_, __, ___) =>
+                        Container(color: Colors.black),
                   ),
           ),
         ),
@@ -45,7 +46,21 @@ class BlurredArtworkOverlay extends StatelessWidget {
       child: IgnorePointer(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 45, sigmaY: 45),
-          child: Container(color: Colors.black.withValues(alpha: 0.55)),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0, 0.42, 0.76, 1],
+                colors: [
+                  Colors.black.withValues(alpha: 0.36),
+                  Colors.black.withValues(alpha: 0.48),
+                  Colors.black.withValues(alpha: 0.82),
+                  Colors.black.withValues(alpha: 0.96),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
