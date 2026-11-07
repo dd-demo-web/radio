@@ -132,16 +132,22 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     ),
                     Row(
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.search),
-                          onPressed: () => setState(() => _isSearching = true),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.notifications_outlined),
-                          onPressed: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                          ),
-                        ),
+                        if (RadioAppState.showSearch)
+                          IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () => setState(() => _isSearching = true),
+                          )
+                        else
+                          const SizedBox(width: 48),
+                        if (RadioAppState.showNotifications)
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                            ),
+                          )
+                        else
+                          const SizedBox(width: 48),
                       ],
                     ),
                   ],

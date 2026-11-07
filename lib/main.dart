@@ -94,31 +94,45 @@ class MainNavigationShell extends StatelessWidget {
         ),
         child: BottomNavigationBar(
           currentIndex: appState.currentNavIndex,
-          onTap: (index) => appState.setNavIndex(index),
+          onTap: (index) {
+            if (index == 2 && !RadioAppState.enableDiscoverTab) return;
+            if (index == 3 && !RadioAppState.enableFavoritesTab) return;
+            if (index == 4 && !RadioAppState.enableProfileTab) return;
+            appState.setNavIndex(index);
+          },
           backgroundColor: const Color(0xFF050506),
           selectedItemColor: const Color(0xFFC4D600),
           unselectedItemColor: const Color(0xFF8E8E94),
           selectedFontSize: 11,
           unselectedFontSize: 11,
-          items: const [
-            BottomNavigationBarItem(
+          items: [
+            const BottomNavigationBarItem(
               icon: Icon(Icons.radio),
               label: 'Live',
             ),
-            BottomNavigationBarItem(
+            const BottomNavigationBarItem(
               icon: Icon(Icons.calendar_today),
               label: 'Palinsesto',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.explore),
+              icon: Icon(
+                Icons.explore,
+                color: RadioAppState.enableDiscoverTab ? null : const Color(0xFF3A3A3C),
+              ),
               label: 'Discover',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border),
+              icon: Icon(
+                Icons.favorite_border,
+                color: RadioAppState.enableFavoritesTab ? null : const Color(0xFF3A3A3C),
+              ),
               label: 'Preferiti',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
+              icon: Icon(
+                Icons.person_outline,
+                color: RadioAppState.enableProfileTab ? null : const Color(0xFF3A3A3C),
+              ),
               label: 'Profilo',
             ),
           ],

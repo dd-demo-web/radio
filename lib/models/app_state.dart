@@ -1,6 +1,16 @@
 import 'package:flutter/foundation.dart';
 
 class RadioAppState extends ChangeNotifier {
+  // Feature Flags
+  static const bool showNotifications = false;
+  static const bool showSearch = false;
+  static const bool showProfileAvatar = false;
+  static const bool showFavoriteIcon = false;
+  static const bool showCastIcon = false;
+  static const bool enableDiscoverTab = false;
+  static const bool enableFavoritesTab = false;
+  static const bool enableProfileTab = false;
+
   int _currentNavIndex = 0; // 0: Live, 1: Palinsesto, 2: Discover, 3: Preferiti, 4: Profilo
   int get currentNavIndex => _currentNavIndex;
 

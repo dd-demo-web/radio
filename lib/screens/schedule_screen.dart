@@ -86,16 +86,22 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   ),
                   Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.notifications_outlined),
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () {},
-                      ),
+                      if (RadioAppState.showSearch)
+                        IconButton(
+                          icon: const Icon(Icons.search),
+                          onPressed: () {},
+                        )
+                      else
+                        const SizedBox(width: 48),
+                      if (RadioAppState.showNotifications)
+                        IconButton(
+                          icon: const Icon(Icons.notifications_outlined),
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                          ),
+                        )
+                      else
+                        const SizedBox(width: 48),
                     ],
                   ),
                 ],
@@ -329,13 +335,16 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 ),
                               ),
                             ),
-                            IconButton(
-                              icon: Icon(
-                                isFav ? Icons.favorite : Icons.favorite_border,
-                                color: isFav ? const Color(0xFFC4D600) : const Color(0xFFA3A3A8),
-                              ),
-                              onPressed: () => appState.toggleFav(item.title),
-                            ),
+                            if (RadioAppState.showFavoriteIcon)
+                              IconButton(
+                                icon: Icon(
+                                  isFav ? Icons.favorite : Icons.favorite_border,
+                                  color: isFav ? const Color(0xFFC4D600) : const Color(0xFFA3A3A8),
+                                ),
+                                onPressed: () => appState.toggleFav(item.title),
+                              )
+                            else
+                              const SizedBox(width: 48),
                           ],
                         ),
                       );

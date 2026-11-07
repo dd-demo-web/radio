@@ -26,12 +26,15 @@ class FavoritesScreen extends StatelessWidget {
                     'Preferiti',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: -0.5),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                    ),
-                  ),
+                  if (RadioAppState.showNotifications)
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                      ),
+                    )
+                  else
+                    const SizedBox(width: 48),
                 ],
               ),
             ),
@@ -140,10 +143,13 @@ class FavoritesScreen extends StatelessWidget {
                                   icon: Icon(hasAlert ? Icons.notifications : Icons.notifications_none, color: hasAlert ? Colors.white : const Color(0xFF76767C)),
                                   onPressed: () => appState.toggleAlert(id),
                                 ),
-                                IconButton(
-                                  icon: const Icon(Icons.favorite, color: Color(0xFFC4D600)),
-                                  onPressed: () => appState.toggleFav(id),
-                                ),
+                                if (RadioAppState.showFavoriteIcon)
+                                  IconButton(
+                                    icon: const Icon(Icons.favorite, color: Color(0xFFC4D600)),
+                                    onPressed: () => appState.toggleFav(id),
+                                  )
+                                else
+                                  const SizedBox(width: 48),
                               ],
                             ),
                           );

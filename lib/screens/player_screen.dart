@@ -88,17 +88,19 @@ class _PlayerScreenState extends State<PlayerScreen> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             toolbarHeight: 100,
-            leading: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 20),
-              child: GestureDetector(
-                onTap: () => appState.setNavIndex(4),
-                child: CircleAvatar(
-                  backgroundColor: const Color(0xFFF4F4F2),
-                  foregroundColor: const Color(0xFF050506),
-                  child: const Text('LF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
-                ),
-              ),
-            ),
+            leading: RadioAppState.showProfileAvatar
+                ? Padding(
+                    padding: const EdgeInsets.only(left: 16, top: 20),
+                    child: GestureDetector(
+                      onTap: () => appState.setNavIndex(4),
+                      child: CircleAvatar(
+                        backgroundColor: const Color(0xFFF4F4F2),
+                        foregroundColor: const Color(0xFF050506),
+                        child: const Text('LF', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
+                      ),
+                    ),
+                  )
+                : null,
             title: Padding(
               padding: const EdgeInsets.only(top: 20),
               child: Container(
@@ -139,36 +141,50 @@ class _PlayerScreenState extends State<PlayerScreen> {
             ),
             centerTitle: true,
             actions: [
-              Stack(
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const NotificationsScreen()),
-                      );
-                    },
-                  ),
-                  if (appState.unreadNotifications)
-                    Positioned(
-                      right: 10,
-                      top: 10,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF33F0FF),
-                          shape: BoxShape.circle,
+              if (RadioAppState.showSearch)
+                IconButton(
+                  icon: const Icon(Icons.search),
+                  onPressed: () {
+                    // TODO: Implement search functionality
+                  },
+                )
+              else
+                const SizedBox(width: 48),
+              if (RadioAppState.showNotifications)
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+                        );
+                      },
+                    ),
+                    if (appState.unreadNotifications)
+                      Positioned(
+                        right: 10,
+                        top: 10,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF33F0FF),
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-              if (currentShow != null)
+                  ],
+                )
+              else
+                const SizedBox(width: 48),
+              if (RadioAppState.showFavoriteIcon && currentShow != null)
                 IconButton(
                   icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? const Color(0xFFC4D600) : Colors.white),
                   onPressed: () => appState.toggleFav(currentShow.title),
-                ),
+                )
+              else
+                const SizedBox(width: 48),
               const SizedBox(width: 8),
             ],
           ),
@@ -387,14 +403,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                   ),
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.cast),
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Uscita audio: Questo dispositivo')),
-                                  );
-                                },
-                              ),
+                              if (RadioAppState.showCastIcon)
+                                IconButton(
+                                  icon: const Icon(Icons.cast),
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Uscita audio: Questo dispositivo')),
+                                    );
+                                  },
+                                )
+                              else
+                                const SizedBox(width: 48),
                             ],
                           ),
                           const SizedBox(height: 16),
