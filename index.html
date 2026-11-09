@@ -127,13 +127,14 @@
         try { storage.setItem(key, '1'); } catch (e) { /* storage non disponibile */ }
       }
 
-      var alreadyInstalled = false;
-
+      function isInstalled() {
+        return storageGet(localStorage, INSTALLED_KEY) === '1';
+      }
       function isDismissed() {
         return storageGet(sessionStorage, DISMISSED_KEY) === '1';
       }
       function canShow() {
-        return !isStandalone && !alreadyInstalled && !isDismissed();
+        return !isStandalone && !isInstalled() && !isDismissed();
       }
 
       function showBanner(message, withAction) {
@@ -145,42 +146,21 @@
         banner.classList.remove('visible');
       }
 
-      // Se il browser sa dire se la PWA è installata (Chrome Android), si usa quella risposta.
-      // Altrimenti (es. Edge Android, Safari iOS) si usa il flag salvato.
-      var installCheck = (navigator.getInstalledRelatedApps
-        ? navigator.getInstalledRelatedApps().catch(function () { return null; })
-        : Promise.resolve(null)
-      ).then(function (apps) {
-        if (isStandalone) {
-          storageSet(localStorage, INSTALLED_KEY);
-          return;
-        }
-        if (apps === null) {
-          alreadyInstalled = storageGet(localStorage, INSTALLED_KEY) === '1';
-        } else if (apps.length > 0) {
-          alreadyInstalled = true;
-          storageSet(localStorage, INSTALLED_KEY);
-        } else {
-          // Il browser conferma che non è installata: dimentica il flag (es. dopo una disinstallazione).
-          alreadyInstalled = false;
-          try { localStorage.removeItem(INSTALLED_KEY); } catch (e) { /* storage non disponibile */ }
-        }
-        if (alreadyInstalled) hideBanner();
-      });
+      if (isStandalone) {
+        // Già installata: non mostrare mai l'invito.
+        storageSet(localStorage, INSTALLED_KEY);
+      }
 
       window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredPrompt = e;
-        installCheck.then(function () {
-          if (canShow()) {
-            showBanner('Installa Radio Wah sulla schermata Home per ascoltarla più velocemente.', true);
-          }
-        });
+        if (canShow()) {
+          showBanner('Installa Radio Wah sulla schermata Home per ascoltarla più velocemente.', true);
+        }
       });
 
       window.addEventListener('appinstalled', function () {
         storageSet(localStorage, INSTALLED_KEY);
-        alreadyInstalled = true;
         deferredPrompt = null;
         hideBanner();
       });
@@ -205,12 +185,8 @@
       });
 
       // iOS/Safari non espone beforeinstallprompt: mostra le istruzioni manuali.
-      if (isIOS) {
-        installCheck.then(function () {
-          if (canShow()) {
-            showBanner('Per installare: tocca Condividi e poi «Aggiungi a Home».', false);
-          }
-        });
+      if (isIOS && canShow()) {
+        showBanner('Per installare: tocca Condividi e poi «Aggiungi a Home».', false);
       }
     })();
   </script>
