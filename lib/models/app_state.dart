@@ -8,10 +8,9 @@ class RadioAppState extends ChangeNotifier {
   static const bool showFavoriteIcon = false;
   static const bool showCastIcon = false;
   static const bool enableDiscoverTab = false;
-  static const bool enableFavoritesTab = false;
-  static const bool enableProfileTab = false;
+  static const bool enableInfoTab = false;
 
-  int _currentNavIndex = 0; // 0: Live, 1: Palinsesto, 2: Discover, 3: Preferiti, 4: Profilo
+  int _currentNavIndex = 0; // 0: Live, 1: Palinsesto, 2: Discover, 3: Info
   int get currentNavIndex => _currentNavIndex;
 
   void setNavIndex(int index) {

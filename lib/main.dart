@@ -7,8 +7,7 @@ import 'models/app_state.dart';
 import 'screens/player_screen.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/discover_screen.dart';
-import 'screens/favorites_screen.dart';
-import 'screens/profile_screen.dart';
+import 'screens/info_screen.dart';
 import 'services/radio_player_controller.dart';
 
 void main() {
@@ -84,26 +83,20 @@ class MainNavigationShell extends StatelessWidget {
       PlayerScreen(),
       ScheduleScreen(),
       DiscoverScreen(),
-      FavoritesScreen(),
-      ProfileScreen(),
+      InfoScreen(),
     ];
     final navItems = [
       (label: 'Live', icon: Icons.radio, enabled: true),
       (label: 'Palinsesto', icon: Icons.calendar_today, enabled: true),
       (
-        label: 'Discover',
+        label: 'Esplora',
         icon: Icons.explore,
         enabled: RadioAppState.enableDiscoverTab,
       ),
       (
-        label: 'Preferiti',
-        icon: Icons.favorite_border,
-        enabled: RadioAppState.enableFavoritesTab,
-      ),
-      (
-        label: 'Profilo',
-        icon: Icons.person_outline,
-        enabled: RadioAppState.enableProfileTab,
+        label: 'Info',
+        icon: Icons.info_outline,
+        enabled: RadioAppState.enableInfoTab,
       ),
     ];
 
@@ -175,7 +168,7 @@ class MainNavigationShell extends StatelessWidget {
       body: IndexedStack(index: appState.currentNavIndex, children: screens),
       bottomNavigationBar: SafeArea(
         top: false,
-        minimum: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        minimum: const EdgeInsets.fromLTRB(16, 12, 16, 12),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(32),
           child: BackdropFilter(
@@ -184,7 +177,7 @@ class MainNavigationShell extends StatelessWidget {
               height: 64,
               padding: const EdgeInsets.symmetric(horizontal: 6),
               decoration: BoxDecoration(
-                color: const Color(0xA6202024),
+                color: const Color(0x94202024),
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                 boxShadow: [
