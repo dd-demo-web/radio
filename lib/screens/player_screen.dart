@@ -321,7 +321,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                               // Currently playing track + equalizer
                               Row(
                                 children: [
-                                  isPlaying ? _buildEqualizer() : _buildLiveDot(),
+                                  isPlaying ? _buildEqualizer() : _buildStaticEqualizer(),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
@@ -535,6 +535,45 @@ class _PlayerScreenState extends State<PlayerScreen>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildStaticEqualizer() {
+    return SizedBox(
+      width: 24,
+      height: 16,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            width: 3,
+            height: 8,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC4D600),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 3),
+          Container(
+            width: 3,
+            height: 12,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC4D600),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(width: 3),
+          Container(
+            width: 3,
+            height: 6,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC4D600),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
