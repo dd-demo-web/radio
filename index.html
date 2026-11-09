@@ -108,7 +108,7 @@
   </script>
   <script>
     (function () {
-      var LEGACY_INSTALLED_KEY = 'radioWahInstalled';
+      var INSTALLED_KEY = 'radioWahInstalled';
       var DISMISSED_KEY = 'radioWahInstallDismissed';
 
       var banner = document.getElementById('install-banner');
@@ -145,15 +145,26 @@
         banner.classList.remove('visible');
       }
 
-      // Il vecchio flag salvato in localStorage restava dopo la disinstallazione: lo rimuoviamo.
-      try { localStorage.removeItem(LEGACY_INSTALLED_KEY); } catch (e) { /* storage non disponibile */ }
-
-      // Chrome/Edge Android: verifica se la PWA è installata. Negli altri browser non è disponibile.
+      // Se il browser sa dire se la PWA è installata (Chrome Android), si usa quella risposta.
+      // Altrimenti (es. Edge Android, Safari iOS) si usa il flag salvato.
       var installCheck = (navigator.getInstalledRelatedApps
-        ? navigator.getInstalledRelatedApps().catch(function () { return []; })
-        : Promise.resolve([])
+        ? navigator.getInstalledRelatedApps().catch(function () { return null; })
+        : Promise.resolve(null)
       ).then(function (apps) {
-        alreadyInstalled = apps.length > 0;
+        if (isStandalone) {
+          storageSet(localStorage, INSTALLED_KEY);
+          return;
+        }
+        if (apps === null) {
+          alreadyInstalled = storageGet(localStorage, INSTALLED_KEY) === '1';
+        } else if (apps.length > 0) {
+          alreadyInstalled = true;
+          storageSet(localStorage, INSTALLED_KEY);
+        } else {
+          // Il browser conferma che non è installata: dimentica il flag (es. dopo una disinstallazione).
+          alreadyInstalled = false;
+          try { localStorage.removeItem(INSTALLED_KEY); } catch (e) { /* storage non disponibile */ }
+        }
         if (alreadyInstalled) hideBanner();
       });
 
@@ -168,6 +179,7 @@
       });
 
       window.addEventListener('appinstalled', function () {
+        storageSet(localStorage, INSTALLED_KEY);
         alreadyInstalled = true;
         deferredPrompt = null;
         hideBanner();
