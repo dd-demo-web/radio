@@ -16,6 +16,7 @@ class RadioApiService {
           Uri.parse(RadioConfig.metadataUrl),
           headers: const {
             'Accept': '*/*',
+            'Accept-Charset': 'UTF-8',
             'Origin': 'https://play.xdevel.com',
             'Referer': 'https://play.xdevel.com/',
           },
@@ -25,7 +26,7 @@ class RadioApiService {
     if (response.statusCode != 200) {
       throw Exception('Errore metadata: HTTP ${response.statusCode}');
     }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     return TrackMetadata.fromJson(data);
   }
 
