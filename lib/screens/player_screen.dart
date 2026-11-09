@@ -19,13 +19,14 @@ class PlayerScreen extends StatefulWidget {
 }
 
 class _PlayerScreenState extends State<PlayerScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   bool _volumeOpen = false;
   double _volume = 80.0;
   bool _muted = false;
   final RadioApiService _apiService = RadioApiService();
   late Future<WeeklySchedule> _scheduleFuture;
   late AnimationController _eqController;
+  late AnimationController _liveDotController;
 
   @override
   void initState() {
@@ -35,12 +36,17 @@ class _PlayerScreenState extends State<PlayerScreen>
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
+    _liveDotController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat();
   }
 
   @override
   void dispose() {
     _apiService.dispose();
     _eqController.dispose();
+    _liveDotController.dispose();
     super.dispose();
   }
 
@@ -236,7 +242,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    isPlaying ? _buildEqualizer() : _buildLiveDot(),
+                                    _buildLiveDot(),
                                     const SizedBox(width: 8),
                                     Text(
                                       'IN ONDA ORA · $showSlot',
@@ -513,13 +519,22 @@ class _PlayerScreenState extends State<PlayerScreen>
   }
 
   Widget _buildLiveDot() {
-    return Container(
-      width: 8,
-      height: 8,
-      decoration: const BoxDecoration(
-        color: Color(0xFFC4D600),
-        shape: BoxShape.circle,
-      ),
+    return AnimatedBuilder(
+      animation: _liveDotController,
+      builder: (context, child) {
+        final scale = 0.8 + 0.4 * (math.sin(_liveDotController.value * math.pi * 2) + 1) / 2;
+        return Transform.scale(
+          scale: scale,
+          child: Container(
+            width: 8,
+            height: 8,
+            decoration: const BoxDecoration(
+              color: Color(0xFFC4D600),
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      },
     );
   }
 
