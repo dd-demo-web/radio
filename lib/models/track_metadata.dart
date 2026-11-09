@@ -18,7 +18,36 @@ class TrackMetadata {
   });
 
   static String _sanitizeText(String text) {
-    return text
+    // First decode HTML entities
+    String decoded = text;
+    // Common HTML entities
+    final entities = {
+      '&egrave;': 'è',
+      '&eacute;': 'é',
+      '&agrave;': 'à',
+      '&eacute;': 'é',
+      '&igrave;': 'ì',
+      '&ograve;': 'ò',
+      '&ugrave;': 'ù',
+      '&Egrave;': 'È',
+      '&Eacute;': 'É',
+      '&Agrave;': 'À',
+      '&Igrave;': 'Ì',
+      '&Ograve;': 'Ò',
+      '&Ugrave;': 'Ù',
+      '&amp;': '&',
+      '&lt;': '<',
+      '&gt;': '>',
+      '&quot;': '"',
+      '&apos;': "'",
+      '&nbsp;': ' ',
+    };
+    for (final entry in entities.entries) {
+      decoded = decoded.replaceAll(entry.key, entry.value);
+    }
+    
+    // Then replace special unicode characters
+    return decoded
         .replaceAll('\u2018', "'") // Left single quotation mark
         .replaceAll('\u2019', "'") // Right single quotation mark
         .replaceAll('\u201C', '"') // Left double quotation mark

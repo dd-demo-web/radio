@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,22 +18,29 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen> {
+class _PlayerScreenState extends State<PlayerScreen>
+    with SingleTickerProviderStateMixin {
   bool _volumeOpen = false;
   double _volume = 80.0;
   bool _muted = false;
   final RadioApiService _apiService = RadioApiService();
   late Future<WeeklySchedule> _scheduleFuture;
+  late AnimationController _eqController;
 
   @override
   void initState() {
     super.initState();
     _scheduleFuture = _apiService.fetchWeeklySchedule();
+    _eqController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
   void dispose() {
     _apiService.dispose();
+    _eqController.dispose();
     super.dispose();
   }
 
@@ -67,6 +76,15 @@ class _PlayerScreenState extends State<PlayerScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<RadioPlayerController>();
     final appState = context.watch<RadioAppState>();
+    final isPlaying = controller.isPlaying;
+
+    // Start/stop animation based on playing state
+    if (isPlaying && !_eqController.isAnimating) {
+      _eqController.repeat();
+    } else if (!isPlaying && _eqController.isAnimating) {
+      _eqController.stop();
+      _eqController.reset();
+    }
 
     return FutureBuilder<WeeklySchedule>(
       future: _scheduleFuture,
@@ -218,14 +236,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: const BoxDecoration(
-                                        color: Color(0xFFC4D600),
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
+                                    isPlaying ? _buildEqualizer() : _buildLiveDot(),
                                     const SizedBox(width: 8),
                                     Text(
                                       'IN ONDA ORA · $showSlot',
@@ -304,7 +315,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
                               // Currently playing track + equalizer
                               Row(
                                 children: [
-                                  _Equalizer(isPlaying: controller.isPlaying),
+                                  isPlaying ? _buildEqualizer() : _buildLiveDot(),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
@@ -482,38 +493,55 @@ class _PlayerScreenState extends State<PlayerScreen> {
       },
     );
   }
-}
 
-class _Equalizer extends StatelessWidget {
-  final bool isPlaying;
-
-  const _Equalizer({required this.isPlaying});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildEqualizer() {
     return SizedBox(
       width: 24,
-      height: 24,
+      height: 16,
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          _bar(isPlaying ? 0.8 : 0.3),
-          _bar(isPlaying ? 1.0 : 0.3),
-          _bar(isPlaying ? 0.5 : 0.3),
+          _eqBar(0),
+          const SizedBox(width: 3),
+          _eqBar(0.2),
+          const SizedBox(width: 3),
+          _eqBar(0.4),
         ],
       ),
     );
   }
 
-  Widget _bar(double heightFactor) {
+  Widget _buildLiveDot() {
     return Container(
-      width: 3,
-      height: 24 * heightFactor,
-      decoration: BoxDecoration(
-        color: const Color(0xFFC4D600),
-        borderRadius: BorderRadius.circular(2),
+      width: 8,
+      height: 8,
+      decoration: const BoxDecoration(
+        color: Color(0xFFC4D600),
+        shape: BoxShape.circle,
       ),
+    );
+  }
+
+  Widget _eqBar(double delay) {
+    return AnimatedBuilder(
+      animation: _eqController,
+      builder: (context, child) {
+        final value = (_eqController.value + delay) % 1.0;
+        final scale = 0.3 + (0.7 * (math.sin(value * math.pi * 2) + 1) / 2);
+        return Transform.scale(
+          scaleY: scale,
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            width: 3,
+            height: 16,
+            decoration: BoxDecoration(
+              color: const Color(0xFFC4D600),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+        );
+      },
     );
   }
 }
