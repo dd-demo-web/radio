@@ -104,16 +104,13 @@ class MainNavigationShell extends StatelessWidget {
     Widget navigationItem(int index) {
       final item = navItems[index];
       final isSelected = appState.currentNavIndex == index;
-      final foreground = !item.enabled
-          ? const Color(0xFF48484D)
-          : isSelected
+      final foreground = isSelected
           ? const Color(0xFFF4F4F2)
           : const Color(0xFFB4B4BA);
 
       return Expanded(
         child: Semantics(
           button: true,
-          enabled: item.enabled,
           selected: isSelected,
           label: item.label,
           child: Padding(
@@ -122,7 +119,7 @@ class MainNavigationShell extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(26),
-                onTap: item.enabled ? () => appState.setNavIndex(index) : null,
+                onTap: () => appState.setNavIndex(index),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
                   height: 52,
@@ -138,7 +135,7 @@ class MainNavigationShell extends StatelessWidget {
                       Icon(
                         item.icon,
                         size: 22,
-                        color: isSelected && item.enabled
+                        color: isSelected
                             ? const Color(0xFFC4D600)
                             : foreground,
                       ),
@@ -208,7 +205,10 @@ class MainNavigationShell extends StatelessWidget {
                     ],
                   ),
                   child: Row(
-                    children: List.generate(navItems.length, navigationItem),
+                    children: [
+                      for (var i = 0; i < navItems.length; i++)
+                        if (navItems[i].enabled) navigationItem(i),
+                    ],
                   ),
                 ),
               ),
