@@ -33,8 +33,43 @@
 
   <title>radio_wah</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    #install-banner {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+      background: #202024;
+      color: #F4F4F2;
+      font: 14px/1.4 system-ui, -apple-system, sans-serif;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+    }
+    #install-banner.visible { display: flex; }
+    #install-banner .install-text { flex: 1; }
+    #install-banner button {
+      border: 0;
+      border-radius: 16px;
+      padding: 8px 14px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    #install-banner .install-action { background: #C4D600; color: #000; }
+    #install-banner .install-action.hidden { display: none; }
+    #install-banner .install-close { background: transparent; color: #B4B4BA; font-size: 20px; line-height: 1; padding: 4px 8px; }
+  </style>
 </head>
 <body>
+  <div id="install-banner" role="dialog" aria-live="polite">
+    <span id="install-text" class="install-text"></span>
+    <button id="install-action" class="install-action" type="button">Installa</button>
+    <button id="install-close" class="install-close" type="button" aria-label="Chiudi">&times;</button>
+  </div>
   <script src="flutter_bootstrap.js" async></script>
   <script>
     if ('serviceWorker' in navigator) {
@@ -70,6 +105,90 @@
         window.location.reload();
       });
     }
+  </script>
+  <script>
+    (function () {
+      var INSTALLED_KEY = 'radioWahInstalled';
+      var DISMISSED_KEY = 'radioWahInstallDismissed';
+
+      var banner = document.getElementById('install-banner');
+      var text = document.getElementById('install-text');
+      var actionBtn = document.getElementById('install-action');
+      var closeBtn = document.getElementById('install-close');
+
+      var deferredPrompt = null;
+      var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+      var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent);
+
+      function storageGet(storage, key) {
+        try { return storage.getItem(key); } catch (e) { return null; }
+      }
+      function storageSet(storage, key) {
+        try { storage.setItem(key, '1'); } catch (e) { /* storage non disponibile */ }
+      }
+
+      function isInstalled() {
+        return storageGet(localStorage, INSTALLED_KEY) === '1';
+      }
+      function isDismissed() {
+        return storageGet(sessionStorage, DISMISSED_KEY) === '1';
+      }
+      function canShow() {
+        return !isStandalone && !isInstalled() && !isDismissed();
+      }
+
+      function showBanner(message, withAction) {
+        text.textContent = message;
+        actionBtn.classList.toggle('hidden', !withAction);
+        banner.classList.add('visible');
+      }
+      function hideBanner() {
+        banner.classList.remove('visible');
+      }
+
+      if (isStandalone) {
+        // Già installata: non mostrare mai l'invito.
+        storageSet(localStorage, INSTALLED_KEY);
+      }
+
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (canShow()) {
+          showBanner('Installa Radio Wah sulla schermata Home per ascoltarla più velocemente.', true);
+        }
+      });
+
+      window.addEventListener('appinstalled', function () {
+        storageSet(localStorage, INSTALLED_KEY);
+        deferredPrompt = null;
+        hideBanner();
+      });
+
+      actionBtn.addEventListener('click', function () {
+        if (!deferredPrompt) return;
+        var promptEvent = deferredPrompt;
+        deferredPrompt = null;
+        hideBanner();
+        promptEvent.prompt();
+        promptEvent.userChoice.then(function (choice) {
+          if (choice.outcome !== 'accepted') {
+            // Rifiutato nel prompt nativo: non riproporlo in questa sessione.
+            storageSet(sessionStorage, DISMISSED_KEY);
+          }
+        });
+      });
+
+      closeBtn.addEventListener('click', function () {
+        storageSet(sessionStorage, DISMISSED_KEY);
+        hideBanner();
+      });
+
+      // iOS/Safari non espone beforeinstallprompt: mostra le istruzioni manuali.
+      if (isIOS && canShow()) {
+        showBanner('Per installare: tocca Condividi e poi «Aggiungi a Home».', false);
+      }
+    })();
   </script>
 </body>
 </html>

@@ -108,7 +108,8 @@ class MainNavigationShell extends StatelessWidget {
           ? const Color(0xFFF4F4F2)
           : const Color(0xFFB4B4BA);
 
-      return Expanded(
+      return SizedBox(
+        width: 84,
         child: Semantics(
           button: true,
           selected: isSelected,
@@ -171,44 +172,52 @@ class MainNavigationShell extends StatelessWidget {
               bottom: mediaQuery.padding.bottom + navBarHeight,
             ),
           ),
-          child: IndexedStack(index: appState.currentNavIndex, children: screens),
+          child: IndexedStack(
+            index: appState.currentNavIndex,
+            children: screens,
+          ),
         ),
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: SafeArea(
-            top: false,
-            minimum: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(32),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: Container(
-                  height: 64,
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0x94202024),
-                    borderRadius: BorderRadius.circular(32),
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        blurRadius: 28,
-                        offset: const Offset(0, 10),
+          child: Center(
+            child: SafeArea(
+              top: false,
+              minimum: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    height: 64,
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0x94202024),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.12),
                       ),
-                      BoxShadow(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        blurRadius: 1,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      for (var i = 0; i < navItems.length; i++)
-                        if (navItems[i].enabled) navigationItem(i),
-                    ],
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          blurRadius: 28,
+                          offset: const Offset(0, 10),
+                        ),
+                        BoxShadow(
+                          color: Colors.white.withValues(alpha: 0.05),
+                          blurRadius: 1,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < navItems.length; i++)
+                          if (navItems[i].enabled) navigationItem(i),
+                      ],
+                    ),
                   ),
                 ),
               ),
