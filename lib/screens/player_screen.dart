@@ -114,14 +114,15 @@ class _PlayerScreenState extends State<PlayerScreen>
             showImage ??
             'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80';
 
-        return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            toolbarHeight: 100,
-            leading: RadioAppState.showProfileAvatar
-                ? Padding(
+        final header = SizedBox(
+          height: 100,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              if (RadioAppState.showProfileAvatar)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
                     padding: const EdgeInsets.only(left: 16, top: 20),
                     child: GestureDetector(
                       onTap: () => appState.setNavIndex(4),
@@ -137,75 +138,84 @@ class _PlayerScreenState extends State<PlayerScreen>
                         ),
                       ),
                     ),
-                  )
-                : null,
-            title: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/logo.jpg',
-                  width: 80,
-                  height: 80,
-                  fit: BoxFit.cover,
-                  filterQuality: FilterQuality.high,
-                  errorBuilder: (_, __, ___) => const Text(
-                    'Radio WAH',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFC4D600),
-                      fontSize: 16,
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.only(top: 16),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/logo.jpg',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (_, __, ___) => const Text(
+                      'Radio WAH',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFC4D600),
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-            centerTitle: true,
-            actions: [
-              if (RadioAppState.showSearch)
-                IconButton(
-                  icon: const Icon(Icons.search),
-                  onPressed: () {
-                    // TODO: Implement search functionality
-                  },
-                ),
-              if (RadioAppState.showNotifications)
-                Stack(
+              Align(
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const NotificationsScreen(),
+                    if (RadioAppState.showSearch)
+                      IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () {
+                          // TODO: Implement search functionality
+                        },
+                      ),
+                    if (RadioAppState.showNotifications)
+                      Stack(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.notifications_outlined),
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const NotificationsScreen(),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
-                    ),
-                    if (appState.unreadNotifications)
-                      Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF33F0FF),
-                            shape: BoxShape.circle,
-                          ),
+                          if (appState.unreadNotifications)
+                            Positioned(
+                              right: 10,
+                              top: 10,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF33F0FF),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    if (RadioAppState.showFavoriteIcon && currentShow != null)
+                      IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? const Color(0xFFC4D600) : Colors.white,
                         ),
+                        onPressed: () => appState.toggleFav(currentShow.title),
                       ),
                   ],
                 ),
-              if (RadioAppState.showFavoriteIcon && currentShow != null)
-                IconButton(
-                  icon: Icon(
-                    isFav ? Icons.favorite : Icons.favorite_border,
-                    color: isFav ? const Color(0xFFC4D600) : Colors.white,
-                  ),
-                  onPressed: () => appState.toggleFav(currentShow.title),
-                ),
+              ),
             ],
           ),
+        );
+
+        return Scaffold(
           body: Stack(
             children: [
               BlurredArtworkBackground(artworkUrl: artwork),
@@ -224,8 +234,15 @@ class _PlayerScreenState extends State<PlayerScreen>
                             vertical: 12,
                           ),
                           child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                             children: [
+                              header,
+                              ConstrainedBox(
+                                constraints: BoxConstraints(
+                                  minHeight: constraints.maxHeight - 124,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  children: [
                               const SizedBox(height: 8),
                               // Live badge
                               Container(
@@ -485,6 +502,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                                 ],
                               ),
                               const SizedBox(height: 16),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
                         ),
