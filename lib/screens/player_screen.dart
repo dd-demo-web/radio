@@ -117,18 +117,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
                 : null,
             title: Padding(
               padding: const EdgeInsets.only(top: 16),
-              child: Image.asset(
-                'assets/logo.jpg',
-                width: 126,
-                height: 92,
-                fit: BoxFit.contain,
-                filterQuality: FilterQuality.high,
-                errorBuilder: (_, __, ___) => const Text(
-                  'Radio WAH',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFFC4D600),
-                    fontSize: 16,
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/logo.jpg',
+                  width: 80,
+                  height: 80,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
+                  errorBuilder: (_, __, ___) => const Text(
+                    'Radio WAH',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFC4D600),
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
