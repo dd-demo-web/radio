@@ -85,6 +85,7 @@ class MainNavigationShell extends StatelessWidget {
       DiscoverScreen(),
       InfoScreen(),
     ];
+    const navBarHeight = 96.0;
     final navItems = [
       (label: 'Live', icon: Icons.radio, enabled: true),
       (label: 'Palinsesto', icon: Icons.calendar_today, enabled: true),
@@ -164,9 +165,17 @@ class MainNavigationShell extends StatelessWidget {
       );
     }
 
+    final mediaQuery = MediaQuery.of(context);
     return Stack(
       children: [
-        IndexedStack(index: appState.currentNavIndex, children: screens),
+        MediaQuery(
+          data: mediaQuery.copyWith(
+            padding: mediaQuery.padding.copyWith(
+              bottom: mediaQuery.padding.bottom + navBarHeight,
+            ),
+          ),
+          child: IndexedStack(index: appState.currentNavIndex, children: screens),
+        ),
         Positioned(
           left: 0,
           right: 0,
