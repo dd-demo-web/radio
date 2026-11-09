@@ -108,7 +108,7 @@
   </script>
   <script>
     (function () {
-      var INSTALLED_KEY = 'radioWahInstalled';
+      var LEGACY_INSTALLED_KEY = 'radioWahInstalled';
       var DISMISSED_KEY = 'radioWahInstallDismissed';
 
       var banner = document.getElementById('install-banner');
@@ -127,14 +127,13 @@
         try { storage.setItem(key, '1'); } catch (e) { /* storage non disponibile */ }
       }
 
-      function isInstalled() {
-        return storageGet(localStorage, INSTALLED_KEY) === '1';
-      }
+      var alreadyInstalled = false;
+
       function isDismissed() {
         return storageGet(sessionStorage, DISMISSED_KEY) === '1';
       }
       function canShow() {
-        return !isStandalone && !isInstalled() && !isDismissed();
+        return !isStandalone && !alreadyInstalled && !isDismissed();
       }
 
       function showBanner(message, withAction) {
@@ -146,21 +145,30 @@
         banner.classList.remove('visible');
       }
 
-      if (isStandalone) {
-        // Già installata: non mostrare mai l'invito.
-        storageSet(localStorage, INSTALLED_KEY);
-      }
+      // Il vecchio flag salvato in localStorage restava dopo la disinstallazione: lo rimuoviamo.
+      try { localStorage.removeItem(LEGACY_INSTALLED_KEY); } catch (e) { /* storage non disponibile */ }
+
+      // Chrome/Edge Android: verifica se la PWA è installata. Negli altri browser non è disponibile.
+      var installCheck = (navigator.getInstalledRelatedApps
+        ? navigator.getInstalledRelatedApps().catch(function () { return []; })
+        : Promise.resolve([])
+      ).then(function (apps) {
+        alreadyInstalled = apps.length > 0;
+        if (alreadyInstalled) hideBanner();
+      });
 
       window.addEventListener('beforeinstallprompt', function (e) {
         e.preventDefault();
         deferredPrompt = e;
-        if (canShow()) {
-          showBanner('Installa Radio Wah sulla schermata Home per ascoltarla più velocemente.', true);
-        }
+        installCheck.then(function () {
+          if (canShow()) {
+            showBanner('Installa Radio Wah sulla schermata Home per ascoltarla più velocemente.', true);
+          }
+        });
       });
 
       window.addEventListener('appinstalled', function () {
-        storageSet(localStorage, INSTALLED_KEY);
+        alreadyInstalled = true;
         deferredPrompt = null;
         hideBanner();
       });
@@ -185,8 +193,12 @@
       });
 
       // iOS/Safari non espone beforeinstallprompt: mostra le istruzioni manuali.
-      if (isIOS && canShow()) {
-        showBanner('Per installare: tocca Condividi e poi «Aggiungi a Home».', false);
+      if (isIOS) {
+        installCheck.then(function () {
+          if (canShow()) {
+            showBanner('Per installare: tocca Condividi e poi «Aggiungi a Home».', false);
+          }
+        });
       }
     })();
   </script>
