@@ -1,5 +1,7 @@
 package com.radiowah.radio_wah
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// AudioServiceActivity condivide il motore Flutter con il servizio audio:
+// la musica continua a schermo spento e Android Auto pilota lo stesso player.
+class MainActivity : AudioServiceActivity()

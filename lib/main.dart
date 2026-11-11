@@ -8,10 +8,25 @@ import 'screens/player_screen.dart';
 import 'screens/schedule_screen.dart';
 import 'screens/discover_screen.dart';
 import 'screens/info_screen.dart';
+import 'services/carplay_bridge.dart';
+import 'services/radio_audio_handler.dart';
 import 'services/radio_player_controller.dart';
 
-void main() {
-  runApp(const RadioWahApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Audio e stato del live nascono qui, non dentro un widget: su iOS il motore
+  // parte anche quando l'app viene aperta solo da CarPlay, su Android quando la
+  // apre Android Auto, e in quei casi non c'è nessuna UI da costruire.
+  final audioHandler = await initRadioAudio();
+  final controller = RadioPlayerController(audioHandler)..start();
+  CarPlayBridge.attach(controller);
+
+  runApp(RadioWahApp(controller: controller));
+
+  // Il primo frame arriva solo quando la UI è davvero sullo schermo:
+  // è lì che parte l'autoplay (sul web può essere bloccato dal browser).
+  WidgetsBinding.instance.addPostFrameCallback((_) => controller.autoplayOnce());
 }
 
 class RadioWahColors {
@@ -26,7 +41,9 @@ class RadioWahColors {
 }
 
 class RadioWahApp extends StatelessWidget {
-  const RadioWahApp({super.key});
+  const RadioWahApp({super.key, required this.controller});
+
+  final RadioPlayerController controller;
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +56,7 @@ class RadioWahApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => RadioAppState()),
-        ChangeNotifierProvider(
-          create: (_) {
-            final controller = RadioPlayerController();
-            controller.init();
-            return controller;
-          },
-        ),
+        ChangeNotifierProvider.value(value: controller),
       ],
       child: MaterialApp(
         title: 'Radio WAH',

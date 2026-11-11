@@ -19,4 +19,16 @@ class RadioConfig {
   /// Intervallo di refresh dei metadata del brano in riproduzione.
   /// Allineato al player ufficiale xdevel (polling ogni 30s).
   static const Duration metadataPollInterval = Duration(seconds: 30);
+
+  /// Se il live si interrompe, riproviamo da soli dopo questo intervallo
+  /// (foundations: "Il live si è interrotto. Riproviamo da soli tra 5 secondi").
+  static const Duration reconnectDelay = Duration(seconds: 5);
+
+  /// Dopo una pausa più lunga di così, al play ricarichiamo lo stream per
+  /// tornare in diretta invece di ripartire dal buffer vecchio.
+  static const Duration liveResumeThreshold = Duration(seconds: 30);
+
+  /// Ogni quanto ricalcoliamo il programma in onda (e ricarichiamo il palinsesto).
+  static const Duration onAirRefreshInterval = Duration(minutes: 1);
+  static const Duration scheduleMaxAge = Duration(hours: 6);
 }
