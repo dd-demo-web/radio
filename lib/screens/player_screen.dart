@@ -144,7 +144,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                 padding: const EdgeInsets.only(top: 16),
                 child: ClipOval(
                   child: Image.asset(
-                    'assets/logo.jpg',
+                    'assets/christmas-logo-transparent.png',
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
