@@ -81472,7 +81472,7 @@ m=q==null?o:q
 if(m==null)m=u.v
 q=t.E
 n=A.c([],q)
-n.push(new A.dj(B.DG,new A.H2(new A.rB(A.azA(k,k,new A.wj("assets/logo.jpg",k,k)),new A.anm(),80,80,B.iI,B.bY,k),k),k))
+n.push(new A.dj(B.DG,new A.H2(new A.rB(A.azA(k,k,new A.wj("assets/christmas-logo-transparent.png",k,k)),new A.anm(),80,80,B.iI,B.bY,k),k),k))
 n.push(new A.lp(B.kx,k,k,A.da(A.c([],q),B.D,B.E,B.cg),k))
 return A.acd(A.pD(B.cy,A.c([new A.Gx(m,k),B.Af,A.LY(A.aJE(new A.ann(l.a,A.hR(A.pD(B.a_,n,B.a3,B.bT,k),100,k),p,l.b,m,s,r,l.d,j)),B.aM,!0)],q),B.a3,B.bT,k))},
 $S:549}
