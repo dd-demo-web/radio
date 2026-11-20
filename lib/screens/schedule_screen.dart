@@ -279,32 +279,6 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 height: 1.4,
                               ),
                             ),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: RadioAppState.enableDiscoverTab
-                                    ? const Color(0xFFF4F4F2)
-                                    : const Color(0xFF2A2A2E),
-                                foregroundColor: RadioAppState.enableDiscoverTab
-                                    ? const Color(0xFF050506)
-                                    : const Color(0xFF76767C),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(24),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 22,
-                                  vertical: 14,
-                                ),
-                              ),
-                              onPressed: RadioAppState.enableDiscoverTab
-                                  ? () =>
-                                        appState.setNavIndex(2) // Discover
-                                  : null,
-                              child: const Text(
-                                'Apri i mixtape',
-                                style: TextStyle(fontWeight: FontWeight.w800),
-                              ),
-                            ),
                           ],
                         ),
                       ),
