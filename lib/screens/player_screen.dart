@@ -24,6 +24,9 @@ class _PlayerScreenState extends State<PlayerScreen>
   double _volume = 80.0;
   bool _muted = false;
   bool _reduceMotion = false;
+  final GlobalKey _volumeButtonKey = GlobalKey();
+  final Object _volumeTapRegionGroup = Object();
+  OverlayEntry? _volumeOverlayEntry;
   final RadioApiService _apiService = RadioApiService();
   late Future<WeeklySchedule> _scheduleFuture;
   late AnimationController _eqController;
@@ -57,10 +60,144 @@ class _PlayerScreenState extends State<PlayerScreen>
 
   @override
   void dispose() {
+    _removeVolumeOverlay();
     _apiService.dispose();
     _eqController.dispose();
     _liveDotController.dispose();
     super.dispose();
+  }
+
+  void _toggleVolumePanel(RadioPlayerController controller) {
+    if (_volumeOpen) {
+      _dismissVolumePanel();
+      return;
+    }
+
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final overlayObject = overlay.context.findRenderObject();
+    final buttonObject = _volumeButtonKey.currentContext?.findRenderObject();
+    if (overlayObject is! RenderBox ||
+        buttonObject is! RenderBox ||
+        !overlayObject.hasSize ||
+        !buttonObject.hasSize) {
+      throw StateError(
+        'Impossibile determinare la posizione del pannello volume.',
+      );
+    }
+
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final double panelWidth = math
+        .max(
+          0.0,
+          math.min(
+            overlayObject.size.width - viewPadding.horizontal - 48,
+            440.0,
+          ),
+        )
+        .toDouble();
+    final buttonTopLeft = buttonObject.localToGlobal(
+      Offset.zero,
+      ancestor: overlayObject,
+    );
+    final left = buttonTopLeft.dx.clamp(
+      viewPadding.left,
+      overlayObject.size.width - viewPadding.right - panelWidth,
+    );
+    final safeTop = viewPadding.top;
+    final safeBottom = overlayObject.size.height - viewPadding.bottom;
+    var top = buttonTopLeft.dy - 52 - 12;
+    if (top < safeTop) {
+      top = buttonTopLeft.dy + buttonObject.size.height + 12;
+    }
+    top = top.clamp(safeTop, math.max(safeTop, safeBottom - 52));
+
+    setState(() => _volumeOpen = true);
+    _volumeOverlayEntry = OverlayEntry(
+      builder: (_) => Positioned(
+        left: left,
+        top: top,
+        width: panelWidth,
+        child: Material(
+          color: Colors.transparent,
+          child: TapRegion(
+            groupId: _volumeTapRegionGroup,
+            onTapOutside: (_) => _dismissVolumePanel(),
+            child: _buildVolumePanel(controller),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(_volumeOverlayEntry!);
+  }
+
+  void _removeVolumeOverlay() {
+    final entry = _volumeOverlayEntry;
+    _volumeOverlayEntry = null;
+    entry?.remove();
+    entry?.dispose();
+  }
+
+  void _dismissVolumePanel() {
+    _removeVolumeOverlay();
+    if (_volumeOpen) setState(() => _volumeOpen = false);
+  }
+
+  Widget _buildVolumePanel(RadioPlayerController controller) {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF202024),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            tooltip: _muted ? 'Attiva audio' : 'Disattiva audio',
+            icon: Icon(_muted ? Icons.volume_off : Icons.volume_up, size: 22),
+            onPressed: () {
+              setState(() => _muted = !_muted);
+              _volumeOverlayEntry?.markNeedsBuild();
+              controller.setVolume(_muted ? 0 : _volume);
+            },
+          ),
+          Expanded(
+            child: Semantics(
+              label: 'Volume',
+              value: '${_muted ? 0 : _volume.toInt()} percento',
+              child: CupertinoSlider(
+                value: _volume,
+                min: 0,
+                max: 100,
+                activeColor: const Color(0xFFF4F4F2),
+                thumbColor: const Color(0xFFF4F4F2),
+                onChanged: (value) {
+                  setState(() => _volume = value);
+                  _volumeOverlayEntry?.markNeedsBuild();
+                  controller.setVolume(value);
+                },
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 32,
+            child: Text(
+              '${_muted ? 0 : _volume.toInt()}',
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   ScheduleItem? _getCurrentShow(WeeklySchedule schedule) {
@@ -116,16 +253,13 @@ class _PlayerScreenState extends State<PlayerScreen>
         final showSlot = currentShow != null
             ? '${currentShow.hourStart} – ${currentShow.hourEnd}'
             : '';
-        final showImage = currentShow?.image;
         final isFav = currentShow != null
             ? appState.isFav(currentShow.title)
             : false;
 
         final artwork =
             controller.currentTrack.artworkLarge ??
-            controller.currentTrack.artworkSmall ??
-            showImage ??
-            'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80';
+            controller.currentTrack.artworkSmall;
 
         final header = SizedBox(
           height: 100,
@@ -327,27 +461,25 @@ class _PlayerScreenState extends State<PlayerScreen>
                                             borderRadius: BorderRadius.circular(
                                               8,
                                             ),
-                                            child: Image.network(
-                                              artwork,
-                                              width: 220,
-                                              height: 220,
-                                              fit: BoxFit.cover,
-                                              semanticLabel:
-                                                  'Copertina del programma $showName',
-                                              errorBuilder: (_, __, ___) =>
-                                                  Container(
+                                            child: artwork == null
+                                                ? const SizedBox(
                                                     width: 220,
                                                     height: 220,
-                                                    color: const Color(
-                                                      0xFF1C1C1F,
-                                                    ),
-                                                    child: const Icon(
-                                                      Icons.radio,
-                                                      size: 64,
-                                                      color: Color(0xFFC4D600),
-                                                    ),
+                                                  )
+                                                : Image.network(
+                                                    artwork,
+                                                    width: 220,
+                                                    height: 220,
+                                                    fit: BoxFit.cover,
+                                                    semanticLabel:
+                                                        'Copertina del programma $showName',
+                                                    errorBuilder:
+                                                        (_, __, ___) =>
+                                                            const SizedBox(
+                                                              width: 220,
+                                                              height: 220,
+                                                            ),
                                                   ),
-                                            ),
                                           ),
                                         ),
                                       ),
@@ -441,113 +573,32 @@ class _PlayerScreenState extends State<PlayerScreen>
                                       ],
                                     ),
                                     const SizedBox(height: 24),
-                                    // Volume panel (outside Stack)
-                                    if (_volumeOpen)
-                                      Container(
-                                        height: 52,
-                                        margin: const EdgeInsets.only(
-                                          bottom: 16,
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFF202024,
-                                          ).withOpacity(0.85),
-                                          borderRadius: BorderRadius.circular(
-                                            26,
-                                          ),
-                                          border: Border.all(
-                                            color: Colors.white.withOpacity(
-                                              0.12,
-                                            ),
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            IconButton(
-                                              tooltip: _muted
-                                                  ? 'Attiva audio'
-                                                  : 'Disattiva audio',
-                                              icon: Icon(
-                                                _muted
-                                                    ? Icons.volume_off
-                                                    : Icons.volume_up,
-                                                size: 22,
-                                              ),
-                                              onPressed: () {
-                                                setState(
-                                                  () => _muted = !_muted,
-                                                );
-                                                controller.setVolume(
-                                                  _muted ? 0 : _volume,
-                                                );
-                                              },
-                                            ),
-                                            Expanded(
-                                              child: Semantics(
-                                                label: 'Volume',
-                                                value:
-                                                    '${_muted ? 0 : _volume.toInt()} percento',
-                                                child: CupertinoSlider(
-                                                  value: _volume,
-                                                  min: 0,
-                                                  max: 100,
-                                                  activeColor: const Color(
-                                                    0xFFF4F4F2,
-                                                  ),
-                                                  thumbColor: const Color(
-                                                    0xFFF4F4F2,
-                                                  ),
-                                                  onChanged: (val) {
-                                                    setState(() {
-                                                      _volume = val;
-                                                    });
-                                                    controller.setVolume(val);
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 32,
-                                              child: Text(
-                                                '${_muted ? 0 : _volume.toInt()}',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                                textAlign: TextAlign.right,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
                                     // Bottom Player Controls
                                     Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.spaceBetween,
                                       children: [
-                                        IconButton(
-                                          tooltip: _volumeOpen
-                                              ? 'Nascondi controlli volume'
-                                              : 'Mostra controlli volume',
-                                          icon: Icon(
-                                            _volumeOpen
-                                                ? Icons.volume_up
-                                                : Icons.volume_down,
+                                        TapRegion(
+                                          groupId: _volumeTapRegionGroup,
+                                          child: IconButton(
+                                            key: _volumeButtonKey,
+                                            tooltip: _volumeOpen
+                                                ? 'Nascondi controlli volume'
+                                                : 'Mostra controlli volume',
+                                            icon: Icon(
+                                              _volumeOpen
+                                                  ? Icons.volume_up
+                                                  : Icons.volume_down,
+                                            ),
+                                            style: IconButton.styleFrom(
+                                              backgroundColor: _volumeOpen
+                                                  ? Colors.white24
+                                                  : Colors.transparent,
+                                              minimumSize: const Size(48, 48),
+                                            ),
+                                            onPressed: () =>
+                                                _toggleVolumePanel(controller),
                                           ),
-                                          style: IconButton.styleFrom(
-                                            backgroundColor: _volumeOpen
-                                                ? Colors.white24
-                                                : Colors.transparent,
-                                            minimumSize: const Size(48, 48),
-                                          ),
-                                          onPressed: () {
-                                            setState(
-                                              () => _volumeOpen = !_volumeOpen,
-                                            );
-                                          },
                                         ),
                                         SizedBox(
                                           width: 76,

@@ -1,6 +1,7 @@
 // Basic smoke test: verifica che l'app Radio Wah si avvii e mostri il
 // pulsante di play/pause principale.
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,12 @@ void main() {
 
     expect(find.text('Radio Wah'), findsWidgets);
     expect(find.byIcon(Icons.calendar_today), findsOneWidget);
+    expect(
+      find.byWidgetPredicate(
+        (widget) => widget is Image && widget.image is NetworkImage,
+      ),
+      findsNothing,
+    );
 
     final appState = tester
         .element(find.byType(MainNavigationShell))
@@ -43,7 +50,7 @@ void main() {
     await tester.pumpWidget(const SizedBox.shrink());
   });
 
-  testWidgets('controlli del player espongono etichette semantiche', (
+  testWidgets('pannello volume sovrapposto e chiuso al tocco esterno', (
     WidgetTester tester,
   ) async {
     final semantics = tester.ensureSemantics();
@@ -62,13 +69,34 @@ void main() {
     await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
     await expectLater(tester, meetsGuideline(textContrastGuideline));
 
+    final playButtonRect = tester.getRect(find.byType(FloatingActionButton));
     await tester.tap(find.byTooltip('Mostra controlli volume'));
     await tester.pump();
+    expect(tester.getRect(find.byType(FloatingActionButton)), playButtonRect);
     expect(find.bySemanticsLabel('Volume'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
+    final volumeButtonRect = tester.getRect(
+      find.byTooltip('Nascondi controlli volume'),
+    );
+    final volumeBefore = tester
+        .getSemantics(find.bySemanticsLabel('Volume'))
+        .value;
+    final sliderRect = tester.getRect(find.byType(CupertinoSlider));
+    expect(sliderRect.bottom, lessThan(volumeButtonRect.top));
+    await tester.dragFrom(
+      Offset(sliderRect.left + sliderRect.width * 0.8, sliderRect.center.dy),
+      const Offset(-40, 0),
+    );
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Volume')).value,
+      isNot(volumeBefore),
+    );
+
     await tester.tap(find.bySemanticsLabel('Palinsesto'));
     await tester.pump();
+    expect(find.bySemanticsLabel('Volume'), findsNothing);
     expect(find.bySemanticsLabel(RegExp('oggi')), findsOneWidget);
     await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
     expect(tester.takeException(), isNull);
