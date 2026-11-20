@@ -26,7 +26,9 @@ Future<void> main() async {
 
   // Il primo frame arriva solo quando la UI è davvero sullo schermo:
   // è lì che parte l'autoplay (sul web può essere bloccato dal browser).
-  WidgetsBinding.instance.addPostFrameCallback((_) => controller.autoplayOnce());
+  WidgetsBinding.instance.addPostFrameCallback(
+    (_) => controller.autoplayOnce(),
+  );
 }
 
 class RadioWahColors {
@@ -125,46 +127,51 @@ class MainNavigationShell extends StatelessWidget {
           button: true,
           selected: isSelected,
           label: item.label,
+          onTap: () => appState.setNavIndex(index),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 2),
             child: Material(
               color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(26),
-                onTap: () => appState.setNavIndex(index),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  height: 52,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? Colors.white.withValues(alpha: 0.12)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        item.icon,
-                        size: 22,
-                        color: isSelected
-                            ? const Color(0xFFC4D600)
-                            : foreground,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: foreground,
-                          fontSize: 10,
-                          fontWeight: isSelected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+              child: ExcludeSemantics(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(26),
+                  onTap: () => appState.setNavIndex(index),
+                  child: AnimatedContainer(
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 180),
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? Colors.white.withValues(alpha: 0.12)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          item.icon,
+                          size: 22,
+                          color: isSelected
+                              ? const Color(0xFFC4D600)
+                              : foreground,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: foreground,
+                            fontSize: 12,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

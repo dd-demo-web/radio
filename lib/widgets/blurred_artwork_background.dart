@@ -16,7 +16,9 @@ class BlurredArtworkBackground extends StatelessWidget {
       child: IgnorePointer(
         child: ClipRect(
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 800),
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 800),
             child: artworkUrl == null
                 ? Container(key: const ValueKey('empty'), color: Colors.black)
                 : Image.network(

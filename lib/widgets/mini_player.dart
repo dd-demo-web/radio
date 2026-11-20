@@ -21,13 +21,13 @@ class MiniPlayer extends StatelessWidget {
     }
 
     final isMixtape = appState.activeMix != null;
-    final backgroundColor = isMixtape 
-        ? const Color(0xFF14242A) 
+    final backgroundColor = isMixtape
+        ? const Color(0xFF14242A)
         : const Color(0xFF1C1C1F);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
-      height: 64,
+      constraints: const BoxConstraints(minHeight: 64),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(12),
@@ -51,7 +51,9 @@ class MiniPlayer extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        currentTrack.title.isNotEmpty ? currentTrack.title : 'Radio Wah',
+                        currentTrack.title.isNotEmpty
+                            ? currentTrack.title
+                            : 'Radio Wah',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -67,7 +69,7 @@ class MiniPlayer extends StatelessWidget {
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
-                              isMixtape 
+                              isMixtape
                                   ? 'Infinito · 64 brani in rotazione'
                                   : '${currentTrack.artist} — ${currentTrack.title}',
                               style: const TextStyle(
@@ -86,6 +88,9 @@ class MiniPlayer extends StatelessWidget {
                 ),
                 // Play/Pause button
                 IconButton(
+                  tooltip: isPlaying
+                      ? 'Metti in pausa'
+                      : 'Riprendi riproduzione',
                   icon: Icon(
                     isPlaying ? Icons.pause : Icons.play_arrow,
                     color: Colors.white,
@@ -104,16 +109,18 @@ class MiniPlayer extends StatelessWidget {
     final artwork = track.artworkLarge ?? track.artworkSmall;
     return ClipRRect(
       borderRadius: BorderRadius.circular(4),
-      child: SizedBox(
-        width: 44,
-        height: 44,
-        child: artwork != null
-            ? Image.network(
-                artwork,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _placeholder(),
-              )
-            : _placeholder(),
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: artwork != null
+              ? Image.network(
+                  artwork,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholder(),
+                )
+              : _placeholder(),
+        ),
       ),
     );
   }
@@ -129,9 +136,7 @@ class MiniPlayer extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: isMixtape 
-            ? const Color(0xFF3EFAC5) 
-            : const Color(0xFFC4D600),
+        color: isMixtape ? const Color(0xFF3EFAC5) : const Color(0xFFC4D600),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(

@@ -42,4 +42,38 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
+
+  testWidgets('controlli del player espongono etichette semantiche', (
+    WidgetTester tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    final controller = RadioPlayerController(RadioAudioHandler());
+    await tester.pumpWidget(RadioWahApp(controller: controller));
+    await tester.pump();
+
+    expect(find.bySemanticsLabel('Live'), findsOneWidget);
+    await tester.ensureVisible(find.byTooltip('Mostra controlli volume'));
+    await tester.pump();
+    expect(
+      tester.getSemantics(find.byTooltip('Mostra controlli volume')).tooltip,
+      'Mostra controlli volume',
+    );
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+
+    await tester.tap(find.byTooltip('Mostra controlli volume'));
+    await tester.pump();
+    expect(find.bySemanticsLabel('Volume'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.tap(find.bySemanticsLabel('Palinsesto'));
+    await tester.pump();
+    expect(find.bySemanticsLabel(RegExp('oggi')), findsOneWidget);
+    await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    semantics.dispose();
+  });
 }

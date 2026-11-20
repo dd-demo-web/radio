@@ -112,6 +112,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     children: [
                       if (RadioAppState.showSearch)
                         IconButton(
+                          tooltip: 'Cerca',
                           icon: const Icon(Icons.search),
                           onPressed: () {},
                         )
@@ -119,6 +120,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                         const SizedBox(width: 48),
                       if (RadioAppState.showNotifications)
                         IconButton(
+                          tooltip: 'Notifiche',
                           icon: const Icon(Icons.notifications_outlined),
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
@@ -153,62 +155,71 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                   final isSelected = index == _selectedDayIndex;
                   final isToday = index == todayIndex;
                   final day = daysData[index];
-                  return GestureDetector(
-                    onTap: () => setState(() => _selectedDayIndex = index),
-                    child: Container(
-                      width: 52,
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? const Color(0xFFF4F4F2)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: isSelected
-                              ? const Color(0xFFF4F4F2)
-                              : const Color(0xFF2A2A2E),
+                  return Semantics(
+                    selected: isSelected,
+                    label:
+                        '${day['short']}, ${day['num']}${isToday ? ', oggi' : ''}',
+                    child: InkWell(
+                      onTap: () => setState(() => _selectedDayIndex = index),
+                      borderRadius: BorderRadius.circular(14),
+                      child: ExcludeSemantics(
+                        child: Container(
+                          width: 52,
+                          height: 68,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFFF4F4F2)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFFF4F4F2)
+                                  : const Color(0xFF2A2A2E),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                isToday ? 'OGGI' : day['short']!,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.8,
+                                  color: isSelected
+                                      ? const Color(0xFF050506)
+                                      : (index > 4
+                                            ? const Color(0xFF76767C)
+                                            : const Color(0xFFF4F4F2)),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                day['num']!,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: isSelected
+                                      ? const Color(0xFF050506)
+                                      : Colors.white,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: isToday
+                                      ? (isSelected
+                                            ? const Color(0xFF050506)
+                                            : const Color(0xFFC4D600))
+                                      : Colors.transparent,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            isToday ? 'OGGI' : day['short']!,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8,
-                              color: isSelected
-                                  ? const Color(0xFF050506)
-                                  : (index > 4
-                                        ? const Color(0xFF76767C)
-                                        : const Color(0xFFF4F4F2)),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            day['num']!,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: isSelected
-                                  ? const Color(0xFF050506)
-                                  : Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Container(
-                            width: 5,
-                            height: 5,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: isToday
-                                  ? (isSelected
-                                        ? const Color(0xFF050506)
-                                        : const Color(0xFFC4D600))
-                                  : Colors.transparent,
-                            ),
-                          ),
-                        ],
                       ),
                     ),
                   );
@@ -286,7 +297,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 ),
                               ),
                               onPressed: RadioAppState.enableDiscoverTab
-                                  ? () => appState.setNavIndex(2) // Discover
+                                  ? () =>
+                                        appState.setNavIndex(2) // Discover
                                   : null,
                               child: const Text(
                                 'Apri i mixtape',
@@ -439,6 +451,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                             ),
                             if (RadioAppState.showFavoriteIcon)
                               IconButton(
+                                tooltip: isFav
+                                    ? 'Rimuovi ${item.title} dai preferiti'
+                                    : 'Aggiungi ${item.title} ai preferiti',
                                 icon: Icon(
                                   isFav
                                       ? Icons.favorite
