@@ -22,6 +22,8 @@ class RadioAudioHandler extends BaseAudioHandler {
 
   /// L'utente vuole ascoltare: se lo stream cade, riproviamo da soli.
   bool _wantsToPlay = false;
+  /// Il browser ha bloccato l'avvio: lo stato resta fermo finché l'utente non preme play.
+  bool _browserBlocked = false;
   DateTime? _pausedAt;
   Timer? _reconnectTimer;
 
@@ -167,6 +169,7 @@ class RadioAudioHandler extends BaseAudioHandler {
         await _player.setUrl(RadioConfig.streamUrl);
       }
       _pausedAt = null;
+      _browserBlocked = false;
       // play() completa solo quando la riproduzione si ferma: non lo aspettiamo.
       unawaited(
         _player.play().catchError((Object e) => _onPlaybackError(e)),
@@ -183,7 +186,11 @@ class RadioAudioHandler extends BaseAudioHandler {
     if (message.contains('NotAllowedError') ||
         message.contains('play() failed')) {
       // Autoplay bloccato dal browser: serve un tap, niente retry.
+      // Il pause resetta lo stato interno del plugin web, altrimenti il primo
+      // play successivo verrebbe ignorato.
       _wantsToPlay = false;
+      _browserBlocked = true;
+      unawaited(_player.pause());
       _broadcastState();
       return;
     }
@@ -205,7 +212,7 @@ class RadioAudioHandler extends BaseAudioHandler {
   }
 
   void _broadcastState() {
-    final playing = _player.playing;
+    final playing = !_browserBlocked && _player.playing;
     playbackState.add(
       playbackState.value.copyWith(
         controls: [
