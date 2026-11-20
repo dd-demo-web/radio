@@ -530,6 +530,23 @@ class _PlayerScreenState extends State<PlayerScreen>
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
+                                              if (controller
+                                                  .currentTrack
+                                                  .albumWithYear
+                                                  .isNotEmpty) ...[
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  controller
+                                                      .currentTrack
+                                                      .albumWithYear,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Color(0xFF7A7A80),
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                              ],
                                             ],
                                           ),
                                         ),
