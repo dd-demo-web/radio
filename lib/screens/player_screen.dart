@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../models/app_state.dart';
-import '../models/schedule.dart';
-import '../services/radio_api_service.dart';
 import '../services/radio_player_controller.dart';
 import '../widgets/blurred_artwork_background.dart';
 import 'notifications_screen.dart';
@@ -27,15 +25,12 @@ class _PlayerScreenState extends State<PlayerScreen>
   final GlobalKey _volumeButtonKey = GlobalKey();
   final Object _volumeTapRegionGroup = Object();
   OverlayEntry? _volumeOverlayEntry;
-  final RadioApiService _apiService = RadioApiService();
-  late Future<WeeklySchedule> _scheduleFuture;
   late AnimationController _eqController;
   late AnimationController _liveDotController;
 
   @override
   void initState() {
     super.initState();
-    _scheduleFuture = _apiService.fetchWeeklySchedule();
     _eqController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -61,7 +56,6 @@ class _PlayerScreenState extends State<PlayerScreen>
   @override
   void dispose() {
     _removeVolumeOverlay();
-    _apiService.dispose();
     _eqController.dispose();
     _liveDotController.dispose();
     super.dispose();
@@ -200,34 +194,6 @@ class _PlayerScreenState extends State<PlayerScreen>
     );
   }
 
-  ScheduleItem? _getCurrentShow(WeeklySchedule schedule) {
-    final todayIndex = (DateTime.now().weekday - 1).clamp(0, 6);
-    final dayKey = WeeklySchedule.dayOrder[todayIndex];
-    final items = schedule.days[dayKey] ?? [];
-
-    final now = TimeOfDay.now();
-    final nowMinutes = now.hour * 60 + now.minute;
-
-    for (final item in items) {
-      try {
-        final startParts = item.hourStart.split(':');
-        final endParts = item.hourEnd.split(':');
-        if (startParts.length < 2 || endParts.length < 2) continue;
-
-        final startMinutes =
-            int.parse(startParts[0]) * 60 + int.parse(startParts[1]);
-        final endMinutes = int.parse(endParts[0]) * 60 + int.parse(endParts[1]);
-
-        if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
-          return item;
-        }
-      } catch (_) {
-        continue;
-      }
-    }
-    return items.isNotEmpty ? items.first : null;
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<RadioPlayerController>();
@@ -242,12 +208,9 @@ class _PlayerScreenState extends State<PlayerScreen>
       _eqController.reset();
     }
 
-    return FutureBuilder<WeeklySchedule>(
-      future: _scheduleFuture,
-      builder: (context, snapshot) {
-        final currentShow = snapshot.hasData
-            ? _getCurrentShow(snapshot.data!)
-            : null;
+    return Builder(
+      builder: (context) {
+        final currentShow = controller.currentShow;
         final showName = currentShow?.title ?? 'Caricamento...';
         final showGenre = currentShow?.subtitle ?? '';
         final showSlot = currentShow != null

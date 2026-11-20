@@ -145,6 +145,8 @@ class RadioPlayerController extends ChangeNotifier {
       final track = await _apiService.fetchCurrentTrack();
       if (track.title == currentTrack.title &&
           track.artist == currentTrack.artist &&
+          track.album == currentTrack.album &&
+          track.year == currentTrack.year &&
           track.artworkLarge == currentTrack.artworkLarge) {
         return;
       }

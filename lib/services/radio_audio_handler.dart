@@ -124,7 +124,7 @@ class RadioAudioHandler extends BaseAudioHandler {
     final hasTrack = track.title.isNotEmpty && track.title != 'Radio Wah';
     final art = track.artworkLarge ?? track.artworkSmall ?? show?.image;
     final item = _liveItem(
-      title: hasTrack ? track.title : (show?.title ?? 'Radio WAH'),
+      title: hasTrack ? track.titleWithDetails : (show?.title ?? 'Radio WAH'),
       artist: hasTrack ? track.artist : 'In diretta',
       album: show?.title ?? 'Radio WAH',
       artUri: art == null ? null : Uri.tryParse(art),

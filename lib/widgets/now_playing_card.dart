@@ -71,6 +71,18 @@ class NowPlayingCard extends StatelessWidget {
               ],
             ),
           ],
+          if (track.albumWithYear.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              track.albumWithYear,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.white54),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
         ],
       ),
     );

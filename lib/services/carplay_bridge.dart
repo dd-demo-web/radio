@@ -49,7 +49,7 @@ class CarPlayBridge {
     final today = c.schedule?.itemsFor(now) ?? const <ScheduleItem>[];
     return {
       'isPlaying': c.isPlaying,
-      'title': track.title,
+      'title': track.titleWithDetails,
       'artist': track.artist,
       'artworkUrl': track.artworkLarge ?? track.artworkSmall ?? show?.image,
       'showTitle': show?.title,

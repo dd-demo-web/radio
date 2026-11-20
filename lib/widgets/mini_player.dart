@@ -52,7 +52,7 @@ class MiniPlayer extends StatelessWidget {
                     children: [
                       Text(
                         currentTrack.title.isNotEmpty
-                            ? currentTrack.title
+                            ? currentTrack.titleWithDetails
                             : 'Radio Wah',
                         style: const TextStyle(
                           fontSize: 14,
