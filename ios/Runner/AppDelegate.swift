@@ -38,6 +38,7 @@ final class PhoneSceneDelegate: UIResponder, UIWindowSceneDelegate {
       bundle: nil
     )
     let window = UIWindow(windowScene: windowScene)
+    window.backgroundColor = .black
     window.rootViewController = flutterViewController
     self.window = window
     window.makeKeyAndVisible()

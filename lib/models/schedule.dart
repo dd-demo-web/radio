@@ -1,3 +1,5 @@
+import 'html_text.dart';
+
 class ScheduleItem {
   final String hourStart;
   final String hourEnd;
@@ -14,17 +16,6 @@ class ScheduleItem {
     this.image,
     this.date,
   });
-
-  static String _sanitizeText(String text) {
-    return text
-        .replaceAll('\u2018', "'") // Left single quotation mark
-        .replaceAll('\u2019', "'") // Right single quotation mark
-        .replaceAll('\u201C', '"') // Left double quotation mark
-        .replaceAll('\u201D', '"') // Right double quotation mark
-        .replaceAll('\u2026', '...') // Ellipsis
-        .replaceAll('\u2013', '-') // En dash
-        .replaceAll('\u2014', '-'); // Em dash
-  }
 
   /// Minuti dalla mezzanotte di "HH:MM", o null se il formato non torna.
   static int? _minutes(String hhmm) {
@@ -58,8 +49,8 @@ class ScheduleItem {
     return ScheduleItem(
       hourStart: (json['hour_start'] ?? json['start'] ?? '').toString(),
       hourEnd: (json['hour_end'] ?? json['end'] ?? '').toString(),
-      title: _sanitizeText((json['title'] ?? json['name'] ?? '').toString()),
-      subtitle: _sanitizeText((json['subtitle'] ?? json['description'] ?? '').toString()),
+      title: sanitizeHtmlText((json['title'] ?? json['name'] ?? '').toString()),
+      subtitle: sanitizeHtmlText((json['subtitle'] ?? json['description'] ?? '').toString()),
       image: json['thumbnail']?.toString() ?? json['image']?.toString(),
       date: json['date']?.toString(),
     );

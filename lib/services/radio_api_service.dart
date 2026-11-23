@@ -38,7 +38,7 @@ class RadioApiService {
     if (response.statusCode != 200) {
       throw Exception('Errore palinsesto: HTTP ${response.statusCode}');
     }
-    final data = jsonDecode(response.body) as Map<String, dynamic>;
+    final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
     return WeeklySchedule.fromJson(data);
   }
 

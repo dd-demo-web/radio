@@ -1,6 +1,7 @@
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'models/app_state.dart';
@@ -14,6 +15,8 @@ import 'services/radio_player_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Sfondo nero: la status bar (ora, batteria, rete) deve avere icone chiare.
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle.light);
 
   // Audio e stato del live nascono qui, non dentro un widget: su iOS il motore
   // parte anche quando l'app viene aperta solo da CarPlay, su Android quando la
