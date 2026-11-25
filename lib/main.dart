@@ -120,60 +120,67 @@ class MainNavigationShell extends StatelessWidget {
     Widget navigationItem(int index) {
       final item = navItems[index];
       final isSelected = appState.currentNavIndex == index;
-      final foreground = isSelected
+      final foreground = !item.enabled
+          ? const Color(0xFF76767C)
+          : isSelected
           ? const Color(0xFFF4F4F2)
           : const Color(0xFFB4B4BA);
 
-      return SizedBox(
-        width: 84,
-        child: Semantics(
-          button: true,
-          selected: isSelected,
-          label: item.label,
-          onTap: () => appState.setNavIndex(index),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 2),
-            child: Material(
-              color: Colors.transparent,
-              child: ExcludeSemantics(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(26),
-                  onTap: () => appState.setNavIndex(index),
-                  child: AnimatedContainer(
-                    duration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 180),
-                    height: 56,
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.white.withValues(alpha: 0.12)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(26),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          item.icon,
-                          size: 22,
-                          color: isSelected
-                              ? const Color(0xFFC4D600)
-                              : foreground,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.label,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: foreground,
-                            fontSize: 12,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
+      return Flexible(
+        child: SizedBox(
+          width: 84,
+          child: Semantics(
+            button: true,
+            enabled: item.enabled,
+            selected: isSelected,
+            label: item.label,
+            onTap: item.enabled ? () => appState.setNavIndex(index) : null,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Material(
+                color: Colors.transparent,
+                child: ExcludeSemantics(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(26),
+                    onTap: item.enabled
+                        ? () => appState.setNavIndex(index)
+                        : null,
+                    child: AnimatedContainer(
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 180),
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.white.withValues(alpha: 0.12)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(26),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            item.icon,
+                            size: 22,
+                            color: isSelected
+                                ? const Color(0xFFC4D600)
+                                : foreground,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 2),
+                          Text(
+                            item.label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: foreground,
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -236,7 +243,7 @@ class MainNavigationShell extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         for (var i = 0; i < navItems.length; i++)
-                          if (navItems[i].enabled) navigationItem(i),
+                          navigationItem(i),
                       ],
                     ),
                   ),

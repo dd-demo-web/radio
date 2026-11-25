@@ -241,17 +241,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     );
                   }
                   final schedule = snapshot.data!;
-                  final dayKey =
-                      WeeklySchedule.dayOrder.length > _selectedDayIndex
-                      ? WeeklySchedule.dayOrder[_selectedDayIndex]
-                      : '';
+                  final dayKey = WeeklySchedule.dayOrder[_selectedDayIndex];
                   List<ScheduleItem> items = schedule.days[dayKey] ?? [];
-                  if (items.isEmpty && schedule.days.isNotEmpty) {
+                  if (!schedule.days.keys.any(
+                    WeeklySchedule.dayOrder.contains,
+                  )) {
                     final keys = schedule.days.keys.toList();
                     if (_selectedDayIndex < keys.length) {
                       items = schedule.days[keys[_selectedDayIndex]] ?? [];
-                    } else {
-                      items = schedule.days.values.first;
                     }
                   }
 
@@ -278,6 +275,27 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 color: Color(0xFFA3A3A8),
                                 height: 1.4,
                               ),
+                            ),
+                            const SizedBox(height: 20),
+                            ElevatedButton(
+                              onPressed: null,
+                              style: ElevatedButton.styleFrom(
+                                disabledBackgroundColor: const Color(
+                                  0xFF2A2A2E,
+                                ),
+                                disabledForegroundColor: const Color(
+                                  0xFF76767C,
+                                ),
+                                minimumSize: const Size(0, 48),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 22,
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              child: const Text('Apri i mixtape'),
                             ),
                           ],
                         ),
