@@ -224,8 +224,8 @@ class _PlayerScreenState extends State<PlayerScreen>
             controller.currentTrack.artworkLarge ??
             controller.currentTrack.artworkSmall;
 
-        final header = SizedBox(
-          height: 100,
+        Widget buildHeader({required bool compact}) => SizedBox(
+          height: compact ? 72 : 100,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -260,12 +260,12 @@ class _PlayerScreenState extends State<PlayerScreen>
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.only(top: 16),
+                padding: EdgeInsets.only(top: compact ? 4 : 16),
                 child: ClipOval(
                   child: Image.asset(
                     'assets/christmas-logo-transparent.png',
-                    width: 80,
-                    height: 80,
+                    width: compact ? 64 : 80,
+                    height: compact ? 64 : 80,
                     fit: BoxFit.cover,
                     filterQuality: FilterQuality.high,
                     semanticLabel: 'Radio WAH',
@@ -350,22 +350,33 @@ class _PlayerScreenState extends State<PlayerScreen>
               SafeArea(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    final compact = constraints.maxHeight < 650;
+                    final verticalPadding = compact ? 8.0 : 12.0;
+                    // Lascia spazio a intestazione, metadati e controlli.
+                    final coverSize = compact
+                        ? (constraints.maxHeight - 370).clamp(48.0, 220.0)
+                        : 220.0;
                     return SingleChildScrollView(
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           minHeight: constraints.maxHeight,
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
+                          padding: EdgeInsets.symmetric(
                             horizontal: 24,
-                            vertical: 12,
+                            vertical: verticalPadding,
                           ),
                           child: Column(
                             children: [
-                              header,
+                              buildHeader(compact: compact),
                               ConstrainedBox(
                                 constraints: BoxConstraints(
-                                  minHeight: constraints.maxHeight - 124,
+                                  minHeight: math.max(
+                                    0,
+                                    constraints.maxHeight -
+                                        (compact ? 72 : 100) -
+                                        2 * verticalPadding,
+                                  ),
                                 ),
                                 child: Column(
                                   mainAxisAlignment:
@@ -397,13 +408,18 @@ class _PlayerScreenState extends State<PlayerScreen>
                                             children: [
                                               _buildLiveDot(),
                                               const SizedBox(width: 8),
-                                              Text(
-                                                'IN ONDA ORA · $showSlot',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w700,
-                                                  letterSpacing: 1.0,
-                                                  color: Colors.white,
+                                              Flexible(
+                                                child: Text(
+                                                  'IN ONDA ORA · $showSlot',
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w700,
+                                                    letterSpacing: 1.0,
+                                                    color: Colors.white,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -411,7 +427,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 20),
+                                    SizedBox(height: compact ? 8 : 20),
                                     // Interactive Cover art
                                     Semantics(
                                       button: true,
@@ -425,29 +441,29 @@ class _PlayerScreenState extends State<PlayerScreen>
                                               8,
                                             ),
                                             child: artwork == null
-                                                ? const SizedBox(
-                                                    width: 220,
-                                                    height: 220,
+                                                ? SizedBox(
+                                                    width: coverSize,
+                                                    height: coverSize,
                                                   )
                                                 : Image.network(
                                                     artwork,
-                                                    width: 220,
-                                                    height: 220,
+                                                    width: coverSize,
+                                                    height: coverSize,
                                                     fit: BoxFit.cover,
                                                     semanticLabel:
                                                         'Copertina del programma $showName',
                                                     errorBuilder:
                                                         (_, __, ___) =>
-                                                            const SizedBox(
-                                                              width: 220,
-                                                              height: 220,
+                                                            SizedBox(
+                                                              width: coverSize,
+                                                              height: coverSize,
                                                             ),
                                                   ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 20),
+                                    SizedBox(height: compact ? 8 : 20),
                                     // Title & Genre
                                     Padding(
                                       padding: const EdgeInsets.symmetric(
@@ -484,7 +500,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                         ],
                                       ),
                                     ),
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: compact ? 8 : 16),
                                     // Currently playing track + equalizer
                                     Row(
                                       children: [
@@ -544,7 +560,8 @@ class _PlayerScreenState extends State<PlayerScreen>
                                                     color: Color(0xFF7A7A80),
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ],
@@ -552,7 +569,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 24),
+                                    SizedBox(height: compact ? 12 : 24),
                                     // Bottom Player Controls
                                     Row(
                                       mainAxisAlignment:
@@ -625,7 +642,7 @@ class _PlayerScreenState extends State<PlayerScreen>
                                           const SizedBox(width: 48),
                                       ],
                                     ),
-                                    const SizedBox(height: 16),
+                                    SizedBox(height: compact ? 8 : 16),
                                   ],
                                 ),
                               ),

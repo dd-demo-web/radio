@@ -10,10 +10,156 @@ import 'package:provider/provider.dart';
 
 import 'package:radio_wah/main.dart';
 import 'package:radio_wah/models/app_state.dart';
+import 'package:radio_wah/models/schedule.dart';
+import 'package:radio_wah/models/track_metadata.dart';
+import 'package:radio_wah/screens/player_screen.dart';
 import 'package:radio_wah/services/radio_audio_handler.dart';
 import 'package:radio_wah/services/radio_player_controller.dart';
 
 void main() {
+  for (final size in [
+    const Size(320, 568),
+    const Size(375, 667),
+    const Size(390, 844),
+  ]) {
+    testWidgets('player visibile senza scroll a $size', (tester) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final controller = RadioPlayerController(RadioAudioHandler())
+        ..currentShow = ScheduleItem(
+          hourStart: '08:30',
+          hourEnd: '10:00',
+          title: 'Moka',
+          subtitle: 'Pop',
+        )
+        ..currentTrack = TrackMetadata(
+          title: 'Brano in onda',
+          artist: 'Artista',
+          album: 'Album',
+          year: '2026',
+        );
+      await tester.pumpWidget(
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider(create: (_) => RadioAppState()),
+            ChangeNotifierProvider.value(value: controller),
+          ],
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: const EdgeInsets.only(top: 24, bottom: 116),
+                ),
+                child: const PlayerScreen(),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final play = find.byType(FloatingActionButton);
+      expect(play.hitTestable(), findsOneWidget);
+      expect(tester.getRect(play).bottom, lessThanOrEqualTo(size.height - 116));
+      expect(
+        tester.getRect(find.byTooltip('Mostra controlli volume')).bottom,
+        lessThanOrEqualTo(size.height - 116),
+      );
+      final scroll = tester.state<ScrollableState>(find.byType(Scrollable));
+      expect(scroll.position.maxScrollExtent, 0);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+  }
+
+  for (final size in [const Size(320, 568), const Size(375, 667)]) {
+    testWidgets(
+      'il player resta sopra il menu nella schermata completa $size',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        tester.view.padding = const FakeViewPadding(top: 24, bottom: 20);
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPadding);
+
+        final controller = RadioPlayerController(RadioAudioHandler());
+        await tester.pumpWidget(RadioWahApp(controller: controller));
+        await tester.pump();
+
+        final play = find.byType(FloatingActionButton);
+        final navItem = find.bySemanticsLabel('Live');
+        expect(play.hitTestable(), findsOneWidget);
+        expect(
+          tester.getRect(play).bottom,
+          lessThan(tester.getRect(navItem).top),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox.shrink());
+      },
+    );
+  }
+
+  testWidgets('testi ingranditi restano accessibili con lo scroll', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = RadioPlayerController(RadioAudioHandler())
+      ..currentShow = ScheduleItem(
+        hourStart: '08:30',
+        hourEnd: '10:00',
+        title: 'Un programma radio dal titolo molto lungo',
+        subtitle: 'Musica e notizie per tutta la mattina',
+      );
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => RadioAppState()),
+          ChangeNotifierProvider.value(value: controller),
+        ],
+        child: MaterialApp(
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: const EdgeInsets.only(top: 24, bottom: 116),
+                textScaler: const TextScaler.linear(1.5),
+              ),
+              child: const PlayerScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(
+      find.text('Un programma radio dal titolo molto lungo'),
+      findsOneWidget,
+    );
+    expect(
+      tester
+          .state<ScrollableState>(find.byType(Scrollable))
+          .position
+          .maxScrollExtent,
+      greaterThan(0),
+    );
+    await tester.ensureVisible(find.byType(FloatingActionButton));
+    await tester.pump();
+    expect(find.byType(FloatingActionButton).hitTestable(), findsOneWidget);
+    expect(
+      tester.getRect(find.byType(FloatingActionButton)).bottom,
+      lessThanOrEqualTo(568 - 116),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   testWidgets('RadioWahApp avvia e mostra il titolo', (
     WidgetTester tester,
   ) async {
