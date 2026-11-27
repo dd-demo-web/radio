@@ -101,7 +101,14 @@ class _PlayerScreenState extends State<PlayerScreen>
     final safeBottom = overlayObject.size.height - viewPadding.bottom;
     var top = buttonTopLeft.dy - 52 - 12;
     if (top < safeTop) {
-      top = buttonTopLeft.dy + buttonObject.size.height + 12;
+      top =
+          buttonObject
+              .localToGlobal(
+                Offset(0, buttonObject.size.height),
+                ancestor: overlayObject,
+              )
+              .dy +
+          12;
     }
     top = top.clamp(safeTop, math.max(safeTop, safeBottom - 52));
 
@@ -356,7 +363,9 @@ class _PlayerScreenState extends State<PlayerScreen>
                     final coverSize = compact
                         ? (constraints.maxHeight - 370).clamp(48.0, 220.0)
                         : 220.0;
-                    return SingleChildScrollView(
+                    return _fitPlayerContent(
+                      context,
+                      constraints,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           minHeight: constraints.maxHeight,
@@ -659,6 +668,21 @@ class _PlayerScreenState extends State<PlayerScreen>
         );
       },
     );
+  }
+
+  Widget _fitPlayerContent(
+    BuildContext context,
+    BoxConstraints constraints, {
+    required Widget child,
+  }) {
+    final platform = Theme.of(context).platform;
+    if (platform == TargetPlatform.android || platform == TargetPlatform.iOS) {
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: SizedBox(width: constraints.maxWidth, child: child),
+      );
+    }
+    return SingleChildScrollView(child: child);
   }
 
   Widget _buildEqualizer() {

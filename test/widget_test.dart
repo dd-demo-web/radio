@@ -18,6 +18,7 @@ import 'package:radio_wah/services/radio_player_controller.dart';
 
 void main() {
   for (final size in [
+    const Size(320, 480),
     const Size(320, 568),
     const Size(375, 667),
     const Size(390, 844),
@@ -48,6 +49,7 @@ void main() {
             ChangeNotifierProvider.value(value: controller),
           ],
           child: MaterialApp(
+            theme: ThemeData(platform: TargetPlatform.android),
             home: Builder(
               builder: (context) => MediaQuery(
                 data: MediaQuery.of(context).copyWith(
@@ -68,8 +70,11 @@ void main() {
         tester.getRect(find.byTooltip('Mostra controlli volume')).bottom,
         lessThanOrEqualTo(size.height - 116),
       );
-      final scroll = tester.state<ScrollableState>(find.byType(Scrollable));
-      expect(scroll.position.maxScrollExtent, 0);
+      expect(find.byType(Scrollable), findsNothing);
+      final playRect = tester.getRect(play);
+      await tester.drag(find.byType(PlayerScreen), const Offset(0, -150));
+      await tester.pump();
+      expect(tester.getRect(play), playRect);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox.shrink());
     });
@@ -103,7 +108,7 @@ void main() {
     );
   }
 
-  testWidgets('testi ingranditi restano accessibili con lo scroll', (
+  testWidgets('testi ingranditi restano visibili senza scroll sul mobile', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(320, 568);
@@ -124,6 +129,7 @@ void main() {
           ChangeNotifierProvider.value(value: controller),
         ],
         child: MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.iOS),
           home: Builder(
             builder: (context) => MediaQuery(
               data: MediaQuery.of(context).copyWith(
@@ -142,6 +148,64 @@ void main() {
       find.text('Un programma radio dal titolo molto lungo'),
       findsOneWidget,
     );
+    final titleRect = tester.getRect(
+      find.text('Un programma radio dal titolo molto lungo'),
+    );
+    expect(titleRect.top, greaterThanOrEqualTo(24));
+    expect(titleRect.bottom, lessThanOrEqualTo(568 - 116));
+    expect(find.byType(Scrollable), findsNothing);
+    expect(find.byType(FloatingActionButton).hitTestable(), findsOneWidget);
+    expect(
+      tester.getRect(find.byType(FloatingActionButton)).bottom,
+      lessThanOrEqualTo(568 - 116),
+    );
+    expect(
+      find.byTooltip('Mostra controlli volume').hitTestable(),
+      findsOneWidget,
+    );
+    await tester.tap(find.byTooltip('Mostra controlli volume'));
+    await tester.pump();
+    expect(find.bySemanticsLabel('Volume'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('il player desktop mantiene lo scroll con testi ingranditi', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final controller = RadioPlayerController(RadioAudioHandler())
+      ..currentShow = ScheduleItem(
+        hourStart: '08:30',
+        hourEnd: '10:00',
+        title: 'Un programma radio dal titolo molto lungo',
+        subtitle: 'Musica e notizie per tutta la mattina',
+      );
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => RadioAppState()),
+          ChangeNotifierProvider.value(value: controller),
+        ],
+        child: MaterialApp(
+          theme: ThemeData(platform: TargetPlatform.macOS),
+          home: Builder(
+            builder: (context) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                padding: const EdgeInsets.only(top: 24, bottom: 116),
+                textScaler: const TextScaler.linear(1.5),
+              ),
+              child: const PlayerScreen(),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+
     expect(
       tester
           .state<ScrollableState>(find.byType(Scrollable))
@@ -152,10 +216,6 @@ void main() {
     await tester.ensureVisible(find.byType(FloatingActionButton));
     await tester.pump();
     expect(find.byType(FloatingActionButton).hitTestable(), findsOneWidget);
-    expect(
-      tester.getRect(find.byType(FloatingActionButton)).bottom,
-      lessThanOrEqualTo(568 - 116),
-    );
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox.shrink());
   });
