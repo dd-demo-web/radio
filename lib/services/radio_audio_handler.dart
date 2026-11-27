@@ -22,6 +22,7 @@ class RadioAudioHandler extends BaseAudioHandler {
 
   /// L'utente vuole ascoltare: se lo stream cade, riproviamo da soli.
   bool _wantsToPlay = false;
+
   /// Il browser ha bloccato l'avvio: lo stato resta fermo finché l'utente non preme play.
   bool _browserBlocked = false;
   DateTime? _pausedAt;
@@ -42,6 +43,11 @@ class RadioAudioHandler extends BaseAudioHandler {
 
   /// Errori di riproduzione (es. autoplay bloccato dal browser).
   Stream<Object> get errors => _errors.stream;
+
+  /// Titolo ICY associato allo stream audio, se disponibile sulla piattaforma.
+  Stream<String?> get icyTitles => _player.icyMetadataStream
+      .map((metadata) => metadata?.info?.title)
+      .distinct();
 
   Future<void> _configureSession() async {
     try {
@@ -171,9 +177,7 @@ class RadioAudioHandler extends BaseAudioHandler {
       _pausedAt = null;
       _browserBlocked = false;
       // play() completa solo quando la riproduzione si ferma: non lo aspettiamo.
-      unawaited(
-        _player.play().catchError((Object e) => _onPlaybackError(e)),
-      );
+      unawaited(_player.play().catchError((Object e) => _onPlaybackError(e)));
     } catch (e) {
       _onPlaybackError(e);
     }
@@ -259,7 +263,9 @@ Future<RadioAudioHandler> initRadioAudio() async {
       ),
     );
   } catch (e) {
-    debugPrint('audio_service non disponibile, player senza controlli di sistema: $e');
+    debugPrint(
+      'audio_service non disponibile, player senza controlli di sistema: $e',
+    );
     return RadioAudioHandler();
   }
 }

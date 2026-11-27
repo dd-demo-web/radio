@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter/widgets.dart';
 
+import '../models/html_text.dart';
 import '../models/schedule.dart';
 import '../models/track_metadata.dart';
 import 'radio_api_service.dart';
@@ -35,9 +36,17 @@ class RadioPlayerController extends ChangeNotifier {
   bool autoplayBlocked = false;
 
   Timer? _metadataTimer;
+  Timer? _metadataRetryTimer;
+  Timer? _icyFallbackTimer;
   Timer? _onAirTimer;
   final List<StreamSubscription<dynamic>> _subscriptions = [];
   bool _autoplayAttempted = false;
+  bool _disposed = false;
+  bool _icyActive = false;
+  TrackMetadata? _icyTrack;
+  int _metadataRevision = 0;
+  int _metadataRequest = 0;
+  int _metadataRetryCount = 0;
 
   RadioPlayerController(this._audio, {RadioApiService? apiService})
     : _apiService = apiService ?? RadioApiService();
@@ -49,7 +58,8 @@ class RadioPlayerController extends ChangeNotifier {
   void start() {
     _subscriptions
       ..add(_audio.playbackState.listen(_onPlaybackState))
-      ..add(_audio.errors.listen(_onError));
+      ..add(_audio.errors.listen(_onError))
+      ..add(_audio.icyTitles.listen(_onIcyTitle));
 
     _fetchMetadata();
     _metadataTimer = Timer.periodic(
@@ -133,6 +143,51 @@ class RadioPlayerController extends ChangeNotifier {
 
   // MARK: brano in onda
 
+  void _onIcyTitle(String? value) {
+    final title = sanitizeHtmlText(value ?? '').trim();
+    if (title.isEmpty) return;
+
+    final separator = title.indexOf(' - ');
+    final artist = separator > 0 ? title.substring(0, separator).trim() : '';
+    final song = separator > 0 ? title.substring(separator + 3).trim() : title;
+    if (song.isEmpty) return;
+
+    final track = TrackMetadata(title: song, artist: artist);
+    if (_icyTrack != null &&
+        _matchesIcy(track, _icyTrack!) &&
+        _matchesIcy(_icyTrack!, track)) {
+      return;
+    }
+    _icyTrack = track;
+    _icyActive = true;
+    _metadataRevision++;
+    _metadataRetryTimer?.cancel();
+    _metadataRetryTimer = null;
+    _metadataRetryCount = 0;
+    _icyFallbackTimer?.cancel();
+    _icyFallbackTimer = null;
+
+    if (!_matchesIcy(currentTrack, track)) {
+      _setCurrentTrack(track);
+    }
+    _fetchMetadata();
+  }
+
+  bool _matchesIcy(TrackMetadata track, TrackMetadata icy) {
+    String normalize(String value) => sanitizeHtmlText(
+      value,
+    ).trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+    return normalize(track.title) == normalize(icy.title) &&
+        (icy.artist.isEmpty ||
+            normalize(track.artist) == normalize(icy.artist));
+  }
+
+  void _setCurrentTrack(TrackMetadata track) {
+    currentTrack = track;
+    _audio.updateLive(currentTrack, currentShow);
+    notifyListeners();
+  }
+
   /// Il polling serve solo se si sta ascoltando o se qualcuno guarda lo schermo.
   void _fetchMetadataIfUseful() {
     final visible =
@@ -140,22 +195,67 @@ class RadioPlayerController extends ChangeNotifier {
     if (isPlaying || visible) _fetchMetadata();
   }
 
+  void _scheduleMetadataRetry() {
+    if (_metadataRetryTimer != null || _metadataRetryCount >= 5) return;
+    _metadataRetryCount++;
+    _metadataRetryTimer = Timer(const Duration(seconds: 3), () {
+      _metadataRetryTimer = null;
+      _fetchMetadataIfUseful();
+    });
+  }
+
   Future<void> _fetchMetadata() async {
+    final revision = _metadataRevision;
+    final request = ++_metadataRequest;
     try {
       final track = await _apiService.fetchCurrentTrack();
-      if (track.title == currentTrack.title &&
-          track.artist == currentTrack.artist &&
-          track.album == currentTrack.album &&
-          track.year == currentTrack.year &&
-          track.artworkLarge == currentTrack.artworkLarge) {
+      if (_disposed ||
+          revision != _metadataRevision ||
+          request != _metadataRequest) {
         return;
       }
-      currentTrack = track;
-      _audio.updateLive(currentTrack, currentShow);
-      notifyListeners();
+      final icyTrack = _icyTrack;
+      if (_icyActive && icyTrack != null) {
+        if (!_matchesIcy(track, icyTrack)) {
+          // L'API può anticipare l'audio o essere in ritardo. Se il disaccordo
+          // persiste, il polling riprende anche quando ICY non funziona più.
+          _icyFallbackTimer ??= Timer(const Duration(minutes: 2), () {
+            _icyFallbackTimer = null;
+            _icyActive = false;
+            _icyTrack = null;
+            _metadataRetryTimer?.cancel();
+            _metadataRetryTimer = null;
+            _fetchMetadataIfUseful();
+          });
+          _scheduleMetadataRetry();
+          return;
+        }
+        _icyFallbackTimer?.cancel();
+        _icyFallbackTimer = null;
+        _metadataRetryTimer?.cancel();
+        _metadataRetryTimer = null;
+      }
+      if (track.title == currentTrack.title &&
+          track.artist == currentTrack.artist &&
+          track.label == currentTrack.label &&
+          track.album == currentTrack.album &&
+          track.year == currentTrack.year &&
+          track.artworkLarge == currentTrack.artworkLarge &&
+          track.artworkSmall == currentTrack.artworkSmall &&
+          track.isNew == currentTrack.isNew &&
+          track.isHit == currentTrack.isHit) {
+        return;
+      }
+      _setCurrentTrack(track);
     } catch (e) {
       // Manteniamo l'ultimo brano noto in caso di errore di rete transitorio.
       debugPrint('Errore nel recupero dei metadata: $e');
+      if (!_disposed &&
+          _icyActive &&
+          revision == _metadataRevision &&
+          request == _metadataRequest) {
+        _scheduleMetadataRetry();
+      }
     }
   }
 
@@ -187,7 +287,10 @@ class RadioPlayerController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _metadataTimer?.cancel();
+    _metadataRetryTimer?.cancel();
+    _icyFallbackTimer?.cancel();
     _onAirTimer?.cancel();
     for (final sub in _subscriptions) {
       sub.cancel();

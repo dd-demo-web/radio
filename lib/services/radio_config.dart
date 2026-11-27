@@ -16,8 +16,7 @@ class RadioConfig {
       'https://cors.xdevel.com/?url=https://api7.xdevel.com/streamsolution/web/metadata/2484/'
       '?clientId=5e9ab6ba0ef6c31a8d27f31d17db0cc34165adee';
 
-  /// Intervallo di refresh dei metadata del brano in riproduzione.
-  /// Allineato al player ufficiale xdevel (polling ogni 30s).
+  /// Intervallo di polling dei metadata, usato anche come ripiego per ICY.
   static const Duration metadataPollInterval = Duration(seconds: 30);
 
   /// Se il live si interrompe, riproviamo da soli dopo questo intervallo

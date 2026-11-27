@@ -2,6 +2,13 @@
 
 A new Flutter project.
 
+## Metadati della diretta
+
+Su Android e iOS il titolo ICY dello stream aggiorna subito il brano; l'API
+aggiunge copertina e dettagli quando corrispondono. Il polling ogni 30 secondi
+resta disponibile, anche sul web. Se API e ICY rimangono discordanti per due
+minuti, il polling torna autonomo.
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
