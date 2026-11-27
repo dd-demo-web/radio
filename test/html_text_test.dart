@@ -18,3 +18,4 @@ void main() {
     expect(sanitizeHtmlText('&unknown; &#xZZ;'), '&unknown; &#xZZ;');
   });
 }
+ 
